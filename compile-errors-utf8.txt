@@ -1,0 +1,460 @@
+﻿
+> Configure project :app
+WARNING: The option setting 'android.builtInKotlin=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.newDsl=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: API 'applicationVariants' is obsolete and has been replaced with 'AndroidComponentsExtension'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+The legacy variant API is disabled by default in AGP 9.0, but can be re-enabled by adding 
+    android.newDsl=false
+to this project's gradle.properties file.
+For more information, see http://developer.android.com/build/r/new-dsl.
+
+To determine what is calling applicationVariants, use -Pandroid.debug.obsoleteApi=true on the command line to display more information.
+WARNING: API 'testVariants' is obsolete and has been replaced with 'AndroidComponentsExtension'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+The legacy variant API is disabled by default in AGP 9.0, but can be re-enabled by adding 
+    android.newDsl=false
+to this project's gradle.properties file.
+For more information, see http://developer.android.com/build/r/new-dsl.
+
+To determine what is calling testVariants, use -Pandroid.debug.obsoleteApi=true on the command line to display more information.
+WARNING: API 'unitTestVariants' is obsolete and has been replaced with 'AndroidComponentsExtension'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+The legacy variant API is disabled by default in AGP 9.0, but can be re-enabled by adding 
+    android.newDsl=false
+to this project's gradle.properties file.
+For more information, see http://developer.android.com/build/r/new-dsl.
+
+To determine what is calling unitTestVariants, use -Pandroid.debug.obsoleteApi=true on the command line to display more information.
+
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :app:kaptGenerateStubsDebugKotlin UP-TO-DATE
+> Task :app:kaptDebugKotlin UP-TO-DATE
+> Task :app:compileDebugKotlin UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:hiltCollectClassesDebug UP-TO-DATE
+> Task :app:hiltAggregateDepsDebug UP-TO-DATE
+> Task :app:hiltJavaCompileDebug UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:bundleDebugClassesToCompileJar UP-TO-DATE
+> Task :app:kaptGenerateStubsDebugUnitTestKotlin UP-TO-DATE
+> Task :app:kaptDebugUnitTestKotlin UP-TO-DATE
+
+> Task :app:compileDebugUnitTestKotlin FAILED
+.\gradlew.bat : e: file:///F:/loglife/app/src/test/java/com/example/loglife/MainActivityTest.kt:4:33 Unresolved 
+reference 'assertExists'.
+At line:1 char:1
++ .\gradlew.bat :app:compileDebugUnitTestKotlin --console=plain *> F:\l ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (e: file:///F:/l...'assertExists'.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:64:79 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:64:79 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:64:96 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:64:96 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:85:79 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:85:79 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:85:96 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:85:96 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:112:79 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:112:79 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:112:96 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:112:96 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:139:79 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:139:79 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:139:96 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:139:96 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:166:79 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:166:79 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:166:96 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:166:96 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:190:79 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:190:79 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:190:96 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:190:96 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:249:79 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:249:79 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:249:96 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/calendar/CalendarScreenTest.kt:249:96 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/components/smartsidebar/SmartSidebarTest.kt:10:25 
+Unresolved reference 'geometry'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/components/smartsidebar/SmartSidebarTest.kt:11:33 
+Unresolved reference 'assertExists'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/components/smartsidebar/SmartSidebarTest.kt:139:25 
+Unresolved reference. None of the following candidates is applicable because of a receiver type mismatch:
+fun SemanticsNodeInteraction.performTouchInput(block: TouchInjectionScope.() -> Unit): SemanticsNodeInteraction
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/components/smartsidebar/SmartSidebarTest.kt:141:18 
+Unresolved reference 'Offset'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/components/smartsidebar/SmartSidebarTest.kt:143:20 
+Unresolved reference 'Offset'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/components/smartsidebar/SmartSidebarTest.kt:167:25 
+Unresolved reference. None of the following candidates is applicable because of a receiver type mismatch:
+fun SemanticsNodeInteraction.performTouchInput(block: TouchInjectionScope.() -> Unit): SemanticsNodeInteraction
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/components/smartsidebar/SmartSidebarTest.kt:169:18 
+Unresolved reference 'Offset'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/components/smartsidebar/SmartSidebarTest.kt:171:20 
+Unresolved reference 'Offset'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/components/smartsidebar/SmartSidebarTest.kt:191:25 
+Unresolved reference. None of the following candidates is applicable because of a receiver type mismatch:
+fun SemanticsNodeInteraction.performTouchInput(block: TouchInjectionScope.() -> Unit): SemanticsNodeInteraction
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/components/smartsidebar/SmartSidebarTest.kt:193:18 
+Unresolved reference 'Offset'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:6:33 Unresolved reference 
+'onNodeWithTextContaining'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:65:83 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:65:83 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:65:100 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:65:100 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:66:51 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:66:51 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:66:68 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:66:68 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:88:83 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:88:83 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:88:100 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:88:100 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:89:51 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:89:51 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:89:68 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:89:68 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:103:25 Unresolved 
+reference 'onNodeWithTextContaining'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:127:83 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:127:83 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:127:100 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:127:100 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:167:51 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:167:51 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:167:68 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:167:68 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:190:83 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:190:83 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:190:100 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:190:100 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:191:51 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:191:51 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:191:68 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:191:68 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:213:83 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:213:83 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:213:100 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:213:100 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:214:51 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:214:51 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:214:68 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/dayview/DayViewScreenTest.kt:214:68 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/eventmanagement/EventManagementScreenTest.kt:82:49 
+Cannot infer type for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/eventmanagement/EventManagementScreenTest.kt:82:49 Not 
+enough information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/eventmanagement/EventManagementScreenTest.kt:82:66 
+Cannot infer type for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/eventmanagement/EventManagementScreenTest.kt:82:66 Not 
+enough information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/eventmanagement/EventManagementScreenTest.kt:102:49 
+Cannot infer type for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/eventmanagement/EventManagementScreenTest.kt:102:49 Not 
+enough information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/eventmanagement/EventManagementScreenTest.kt:102:66 
+Cannot infer type for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/eventmanagement/EventManagementScreenTest.kt:102:66 Not 
+enough information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/eventmanagement/EventManagementScreenTest.kt:138:60 
+Unresolved reference 'onFirst'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/eventmanagement/EventManagementScreenTest.kt:139:54 
+Unresolved reference 'onFirst'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/eventmanagement/EventManagementScreenTest.kt:196:49 
+Cannot infer type for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/eventmanagement/EventManagementScreenTest.kt:196:49 Not 
+enough information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/eventmanagement/EventManagementScreenTest.kt:196:66 
+Cannot infer type for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/eventmanagement/EventManagementScreenTest.kt:196:66 Not 
+enough information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:9:33 Unresolved reference 
+'onNodeWithTextContaining'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:34:33 Unresolved reference 
+'assertDoesNotExist'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:79:51 Cannot infer type for this 
+parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:79:51 Not enough information to 
+infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:79:68 Cannot infer type for this 
+parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:79:68 Not enough information to 
+infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:102:51 Cannot infer type for 
+this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:102:51 Not enough information to 
+infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:102:68 Cannot infer type for 
+this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:102:68 Not enough information to 
+infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:163:25 Unresolved reference 
+'onNodeWithTextContaining'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:227:51 Cannot infer type for 
+this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:227:51 Not enough information to 
+infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:227:68 Cannot infer type for 
+this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:227:68 Not enough information to 
+infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:314:51 Cannot infer type for 
+this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:314:51 Not enough information to 
+infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:314:68 Cannot infer type for 
+this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:314:68 Not enough information to 
+infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:342:51 Cannot infer type for 
+this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:342:51 Not enough information to 
+infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:342:68 Cannot infer type for 
+this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:342:68 Not enough information to 
+infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:367:51 Cannot infer type for 
+this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:367:51 Not enough information to 
+infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:367:68 Cannot infer type for 
+this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:367:68 Not enough information to 
+infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:392:51 Cannot infer type for 
+this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:392:51 Not enough information to 
+infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:392:68 Cannot infer type for 
+this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:392:68 Not enough information to 
+infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:417:51 Cannot infer type for 
+this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:417:51 Not enough information to 
+infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:417:68 Cannot infer type for 
+this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/home/HomeScreenTest.kt:417:68 Not enough information to 
+infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/logging/LogEventScreenTest.kt:75:49 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/logging/LogEventScreenTest.kt:75:49 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/logging/LogEventScreenTest.kt:75:66 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/logging/LogEventScreenTest.kt:75:66 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/logging/LogEventScreenTest.kt:95:49 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/logging/LogEventScreenTest.kt:95:49 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/logging/LogEventScreenTest.kt:95:66 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/logging/LogEventScreenTest.kt:95:66 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/logging/LogEventScreenTest.kt:129:60 Unresolved 
+reference 'onFirst'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/logging/LogEventScreenTest.kt:130:54 Unresolved 
+reference 'onFirst'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/report/MonthlyReportScreenTest.kt:10:33 Unresolved 
+reference 'onNodeWithTextContaining'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/report/MonthlyReportScreenTest.kt:31:33 Unresolved 
+reference 'assertDoesNotExist'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/report/MonthlyReportScreenTest.kt:62:79 Cannot infer 
+type for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/report/MonthlyReportScreenTest.kt:62:79 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/report/MonthlyReportScreenTest.kt:62:96 Cannot infer 
+type for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/report/MonthlyReportScreenTest.kt:62:96 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/report/MonthlyReportScreenTest.kt:93:79 Cannot infer 
+type for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/report/MonthlyReportScreenTest.kt:93:79 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/report/MonthlyReportScreenTest.kt:93:96 Cannot infer 
+type for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/report/MonthlyReportScreenTest.kt:93:96 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/report/MonthlyReportScreenTest.kt:106:25 Unresolved 
+reference 'onNodeWithTextContaining'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/report/MonthlyReportScreenTest.kt:153:25 Unresolved 
+reference 'onNodeWithTextContaining'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/report/MonthlyReportScreenTest.kt:155:52 Unresolved 
+reference 'onFirst'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/report/MonthlyReportScreenTest.kt:156:52 Unresolved 
+reference 'onFirst'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/report/MonthlyReportScreenTest.kt:157:51 Unresolved 
+reference 'onFirst'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/report/MonthlyReportScreenTest.kt:158:52 Unresolved 
+reference 'onFirst'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/report/MonthlyReportScreenTest.kt:246:79 Cannot infer 
+type for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/report/MonthlyReportScreenTest.kt:246:79 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/report/MonthlyReportScreenTest.kt:246:96 Cannot infer 
+type for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/report/MonthlyReportScreenTest.kt:246:96 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/report/MonthlyReportScreenTest.kt:275:79 Cannot infer 
+type for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/report/MonthlyReportScreenTest.kt:275:79 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/report/MonthlyReportScreenTest.kt:275:96 Cannot infer 
+type for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/report/MonthlyReportScreenTest.kt:275:96 Not enough 
+information to infer type argument for 'T'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/settings/SettingsScreenTest.kt:48:9 Unresolved 
+reference 'Column'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/settings/SettingsScreenTest.kt:52:13 @Composable 
+invocations can only happen from the context of a @Composable function
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/settings/SettingsScreenTest.kt:92:55 Unresolved 
+reference 'onFirst'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/settings/SettingsScreenTest.kt:93:55 Unresolved 
+reference 'onFirst'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/settings/SettingsScreenTest.kt:198:55 Unresolved 
+reference 'onFirst'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/settings/SettingsScreenTest.kt:233:55 Unresolved 
+reference 'onLast'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/widgetsslot/WidgetSlotTest.kt:42:13 No value passed for 
+parameter 'content'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/widgetsslot/WidgetSlotTest.kt:43:11 Too many arguments 
+for 'fun WidgetSlot(state: WidgetSlotState, modifier: Modifier = ..., content: @Composable() 
+ComposableFunction1<WidgetSlotState, Unit>, onRetry: (() -> Unit)? = ...): Unit'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/widgetsslot/WidgetSlotTest.kt:43:13 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/widgetsslot/WidgetSlotTest.kt:100:13 No value passed 
+for parameter 'content'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/widgetsslot/WidgetSlotTest.kt:101:11 Too many arguments 
+for 'fun WidgetSlot(state: WidgetSlotState, modifier: Modifier = ..., content: @Composable() 
+ComposableFunction1<WidgetSlotState, Unit>, onRetry: (() -> Unit)? = ...): Unit'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/widgetsslot/WidgetSlotTest.kt:101:13 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/widgetsslot/WidgetSlotTest.kt:121:13 No value passed 
+for parameter 'content'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/widgetsslot/WidgetSlotTest.kt:122:11 Too many arguments 
+for 'fun WidgetSlot(state: WidgetSlotState, modifier: Modifier = ..., content: @Composable() 
+ComposableFunction1<WidgetSlotState, Unit>, onRetry: (() -> Unit)? = ...): Unit'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/widgetsslot/WidgetSlotTest.kt:122:13 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/widgetsslot/WidgetSlotTest.kt:142:13 No value passed 
+for parameter 'content'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/widgetsslot/WidgetSlotTest.kt:143:11 Too many arguments 
+for 'fun WidgetSlot(state: WidgetSlotState, modifier: Modifier = ..., content: @Composable() 
+ComposableFunction1<WidgetSlotState, Unit>, onRetry: (() -> Unit)? = ...): Unit'.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/widgetsslot/WidgetSlotTest.kt:143:13 Cannot infer type 
+for this parameter. Specify it explicitly.
+e: file:///F:/loglife/app/src/test/java/com/example/loglife/ui/widgetsslot/WidgetSlotTest.kt:145:48 @Composable 
+invocations can only happen from the context of a @Composable function
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugUnitTestKotlin'.
+> A failure occurred while executing 
+org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 3s
+26 actionable tasks: 1 executed, 25 up-to-date
