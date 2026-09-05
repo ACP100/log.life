@@ -1,0 +1,1 @@
+- [Fixed MonthlyReportScreen TODOs](monthlyreport-todos.md) — Implemented rememberReportDataState and rememberIsLoadingState functions to properly integrate with MainViewModel

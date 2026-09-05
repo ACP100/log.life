@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rtk ls *)",
+      "Bash(rtk grep *)",
+      "Bash(rtk gradlew *)",
+      "Bash(.gradlew testDebugUnitTest *)",
+      "PowerShell(.\\\\gradlew.bat testDebugUnitTest --tests \"com.example.loglife.ui.settings.SettingsScreenTest\")",
+      "PowerShell(.\\\\gradlew.bat clean)",
+      "PowerShell(.\\\\gradlew.bat compileDebugKotlin)",
+      "PowerShell(.\\\\gradlew.bat :app:dependencies --configuration debugRuntimeClasspath)",
+      "Bash(.\\\\gradlew.bat properties *)",
+      "Bash(findstr \"version\")",
+      "Bash(.gradlew.bat *)",
+      "Bash(./gradlew :app:dependencies --configuration debugRuntimeClasspath)",
+      "WebFetch(domain:dl.google.com)",
+      "Bash(rtk read *)",
+      "WebFetch(domain:repo.maven.apache.org)",
+      "WebFetch(domain:repo1.maven.org)",
+      "Bash(curl -s \"https://maven.google.com/androidx/compose/foundation/foundation-interaction/1.0.0/foundation-interaction-1.0.0.pom\")",
+      "Bash(curl -s \"https://dl.google.com/dl/android/maven2/androidx/compose/foundation/foundation-interaction/1.0.0/foundation-interaction-1.0.0.pom\")",
+      "Bash(rtk curl *)",
+      "Bash(curl -s \"https://dl.google.com/dl/android/maven2/androidx/compose/foundation/foundation-interaction/maven-metadata.xml\")",
+      "Bash(curl -s \"https://dl.google.com/dl/android/maven2/androidx/compose/foundation/foundation-interaction/\")",
+      "Bash(curl -s \"https://repo1.maven.org/maven2/androidx/compose/foundation/foundation-interaction/\")",
+      "Bash(curl -s \"https://dl.google.com/dl/android/maven2/androidx/compose/compose-bom/\")",
+      "Bash(curl -s \"https://maven.google.com/androidx/compose/\")",
+      "Bash(curl -s \"https://maven.google.com/androidx/compose/compose-bom/maven-metadata.xml\")",
+      "Bash(curl -s \"https://maven.google.com/androidx/compose/foundation/foundation/1.6.0/foundation-1.6.0.pom\")",
+      "Bash(curl -s \"https://dl.google.com/dl/android/maven2/androidx/compose/foundation/foundation/1.6.0/foundation-1.6.0.pom\")"
+    ]
+  }
+}
