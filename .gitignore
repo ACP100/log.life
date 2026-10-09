@@ -10,6 +10,26 @@
 .DS_Store
 /build
 /captures
-.externalNativeBuild
+/externalNativeBuild
 .cxx
 local.properties
+
+# IDE
+.idea/
+*.iml
+.claude/
+
+# Kotlin
+.kotlin/
+
+# Build output / logs
+compile-*.txt
+test-run*.txt
+*.bak
+
+# Documentation / temporary files
+*SUMMARY.md
+*Summary.md
+FINAL_NOTE.md
+TASK_COMPLETED.md
+TODO_FIXED_AND_TESTED.md
