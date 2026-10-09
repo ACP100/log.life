@@ -29,8 +29,6 @@ import com.example.loglife.data.model.EventType
 import com.example.loglife.ui.main.MainViewModel
 import com.example.loglife.ui.theme.LoglifeTheme
 import com.example.loglife.util.DateTimeUtils
-import com.example.loglife.ui.widgetsslot.WidgetSlot
-import com.example.loglife.ui.widgetsslot.WidgetSlotState
 import java.util.*
 
 /**
