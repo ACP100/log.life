@@ -10,7 +10,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.example.loglife.data.model.EventType
-import com.example.loglife.ui.main.MainViewModel
+import com.example.loglife.viewmodel.MainViewModel
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,13 +30,13 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.material3.ExperimentalMaterial3Api
 
 /**
- * Tests for LogEventScreen functionality.
+ * Tests for EventSelectionScreen functionality.
  */
 @OptIn(ExperimentalCoroutinesApi::class, ExperimentalMaterial3Api::class)
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-class LogEventScreenTest {
+class EventSelectionScreenTest {
 
     // Create a Compose rule for testing UI components
     @get:Rule
@@ -73,7 +73,7 @@ class LogEventScreenTest {
     }
 
     @Test
-    fun `LogEventScreen displays loading indicator when isLoading is true`() {
+    fun `EventSelectionScreen displays loading indicator when isLoading is true`() {
         // Arrange
         val loadingState = MutableStateFlow(true)
         `when`(viewModel.isLoading).thenReturn(loadingState as StateFlow<Boolean>)
@@ -81,7 +81,7 @@ class LogEventScreenTest {
 
         // Act
         composeTestRule.setContent({
-            LogEventScreen(
+            EventSelectionScreen(
                 viewModel = viewModel,
                 onEventSelected = { },
                 onNavigateBack = { }
@@ -94,14 +94,14 @@ class LogEventScreenTest {
     }
 
     @Test
-    fun `LogEventScreen displays empty state when no event types`() {
+    fun `EventSelectionScreen displays empty state when no event types`() {
         // Arrange
         `when`(viewModel.isLoading).thenReturn(MutableStateFlow(false) as StateFlow<Boolean>)
         `when`(viewModel.eventTypes).thenReturn(MutableStateFlow<List<EventType>>(emptyList()))
 
         // Act
         composeTestRule.setContent({
-            LogEventScreen(
+            EventSelectionScreen(
                 viewModel = viewModel,
                 onEventSelected = { },
                 onNavigateBack = { }
@@ -114,14 +114,14 @@ class LogEventScreenTest {
     }
 
     @Test
-    fun `LogEventScreen displays list of event types when available`() {
+    fun `EventSelectionScreen displays list of event types when available`() {
         // Arrange
         `when`(viewModel.isLoading).thenReturn(MutableStateFlow(false) as StateFlow<Boolean>)
         `when`(viewModel.eventTypes).thenReturn(MutableStateFlow(testEventTypes) as StateFlow<List<EventType>>)
 
         // Act
         composeTestRule.setContent({
-            LogEventScreen(
+            EventSelectionScreen(
                 viewModel = viewModel,
                 onEventSelected = { },
                 onNavigateBack = { }
@@ -136,7 +136,7 @@ class LogEventScreenTest {
     }
 
     @Test
-    fun `LogEventScreen navigates back when back button is clicked`() {
+    fun `EventSelectionScreen navigates back when back button is clicked`() {
         // Arrange
         var navigateBackCalled = false
         `when`(viewModel.isLoading).thenReturn(MutableStateFlow(false) as StateFlow<Boolean>)
@@ -144,7 +144,7 @@ class LogEventScreenTest {
 
         // Act
         composeTestRule.setContent({
-            LogEventScreen(
+            EventSelectionScreen(
                 viewModel = viewModel,
                 onEventSelected = { },
                 onNavigateBack = { navigateBackCalled = true }
@@ -159,7 +159,7 @@ class LogEventScreenTest {
     }
 
     @Test
-    fun `LogEventScreen calls onEventSelected when an event type is clicked`() {
+    fun `EventSelectionScreen calls onEventSelected when an event type is clicked`() {
         // Arrange
         var selectedEventId: Long? = null
         `when`(viewModel.isLoading).thenReturn(MutableStateFlow(false) as StateFlow<Boolean>)
@@ -167,7 +167,7 @@ class LogEventScreenTest {
 
         // Act
         composeTestRule.setContent({
-            LogEventScreen(
+            EventSelectionScreen(
                 viewModel = viewModel,
                 onEventSelected = { selectedEventId = it },
                 onNavigateBack = { }

@@ -1,4 +1,4 @@
-package com.example.loglife.ui.logging
+package com.example.loglife
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -9,9 +9,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import dagger.hilt.android.AndroidEntryPoint
-import com.example.loglife.ui.main.MainViewModel
+import com.example.loglife.viewmodel.MainViewModel
 import com.example.loglife.ui.theme.LoglifeTheme
-import com.example.loglife.ui.logging.LogEventScreen
+import com.example.loglife.ui.logging.EventSelectionScreen
 
 /**
  * Activity for hosting the Log Event screen.
@@ -27,7 +27,7 @@ class LogEventActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             LoglifeTheme {
-                LogEventScreen(
+                EventSelectionScreen(
                     viewModel = viewModel,
                     onEventSelected = { eventTypeId ->
                         viewModel.logEvent(eventTypeId)

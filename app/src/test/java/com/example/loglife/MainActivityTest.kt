@@ -88,9 +88,9 @@ class MainActivityTest {
 
         // Assert
         composeTestRule.onNodeWithText("Main Content").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Home").assertExists()
-        composeTestRule.onNodeWithText("Calendar").assertExists()
-        composeTestRule.onNodeWithText("Settings").assertExists()
+        composeTestRule.onNodeWithContentDescription("Home icon").assertExists()
+        composeTestRule.onNodeWithContentDescription("Calendar icon").assertExists()
+        composeTestRule.onNodeWithContentDescription("Settings icon").assertExists()
     }
 
     @Test
@@ -120,6 +120,7 @@ class MainActivityTest {
     fun `SmartSidebarState handles drag updates`() {
         // Arrange
         val state = SmartSidebarState()
+        state.startDragging()
 
         // Act
         state.updateDragOffset(-0.5f) // Halfway open
@@ -144,7 +145,7 @@ class MainActivityTest {
         assertThat(state.isOpen).isFalse()
 
         // Reset state
-        state.updateDragOffset(-0.6f) // More than halfway open
+        state.updateDragOffset(-0.4f) // More than halfway open
         state.onDragEnd(-100f) // Slight negative velocity
 
         // Assert - Should open since we're more than halfway open

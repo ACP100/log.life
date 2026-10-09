@@ -16,16 +16,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.loglife.ui.main.MainViewModel
+import com.example.loglife.data.model.EventInstance
+import com.example.loglife.data.model.EventMode
+import com.example.loglife.data.model.EventType
+import com.example.loglife.viewmodel.MainViewModel
+import com.example.loglife.ui.theme.LoglifeTheme
 import com.example.loglife.util.DateTimeUtils
 import com.example.loglife.data.dao.EventInstanceWithType
 import kotlinx.coroutines.flow.map
 import java.util.*
+import androidx.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StatsScreen() {
-    val viewModel: MainViewModel = hiltViewModel()
+fun StatsScreen(
+    viewModel: MainViewModel = hiltViewModel()
+) {
     var timeframe by remember { mutableStateOf(Timeframe.Month) }
 
     val now = DateTimeUtils.nowUtc()
@@ -40,6 +46,29 @@ fun StatsScreen() {
         .collectAsState(initial = emptyList<EventInstanceWithType>())
     val isLoading by viewModel.isLoading.collectAsState(initial = false)
 
+    StatsScreenContent(
+        timeframe = timeframe,
+        events = events,
+        isLoading = isLoading,
+        startTime = startTime,
+        onTimeframeChange = { timeframe = it }
+    )
+}
+
+/**
+ * ViewModel-free statistics content: selector + stats or empty state.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun StatsScreenContent(
+    timeframe: Timeframe,
+    events: List<EventInstanceWithType>,
+    isLoading: Boolean,
+    startTime: Long,
+    onTimeframeChange: (Timeframe) -> Unit,
+    modifier: Modifier = Modifier
+) {
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -48,7 +77,7 @@ fun StatsScreen() {
         }
     ) { innerPadding ->
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
@@ -58,7 +87,7 @@ fun StatsScreen() {
             } else {
                 TimeframeSelector(
                     selectedTimeframe = timeframe,
-                    onTimeframeClick = { timeframe = it }
+                    onTimeframeClick = onTimeframeChange
                 )
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -197,6 +226,33 @@ private fun CenteredLoadingIndicator() {
     }
 }
 
-private enum class Timeframe {
+enum class Timeframe {
     Day, Week, Month, Year
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 640)
+@Composable
+fun StatsScreenPreview() {
+    // Never call StatsScreen() here: it resolves MainViewModel via hiltViewModel(),
+    // which crashes the preview. Render the stateless content with sample data instead.
+    val now = DateTimeUtils.nowUtc()
+    val sampleEvents = listOf(
+        EventInstanceWithType(
+            eventInstance = EventInstance(id = 1, eventTypeId = 1, startTime = now - 2 * 60 * 60 * 1000),
+            eventType = EventType(id = 1, name = "Work", icon = "work", eventMode = EventMode.DURATION, category = "Work")
+        ),
+        EventInstanceWithType(
+            eventInstance = EventInstance(id = 2, eventTypeId = 2, startTime = now - 5 * 60 * 60 * 1000),
+            eventType = EventType(id = 2, name = "Coffee", icon = "coffee", eventMode = EventMode.INSTANT, category = "Food")
+        )
+    )
+    LoglifeTheme {
+        StatsScreenContent(
+            timeframe = Timeframe.Month,
+            events = sampleEvents,
+            isLoading = false,
+            startTime = DateTimeUtils.getStartOfMonth(now),
+            onTimeframeChange = {}
+        )
+    }
 }

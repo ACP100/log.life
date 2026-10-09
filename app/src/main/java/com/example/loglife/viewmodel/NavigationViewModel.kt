@@ -2,8 +2,8 @@ package com.example.loglife.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.loglife.ui.navigation.Destination
-import com.example.loglife.ui.navigation.NavigationItem
+import com.example.loglife.navigation.Destination
+import com.example.loglife.navigation.NavigationItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CalendarToday
@@ -14,6 +14,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 import androidx.compose.material.icons.filled.Home
+import com.example.loglife.navigation.CalendarDestination
+import com.example.loglife.navigation.HomeDestination
+import com.example.loglife.navigation.LogActivityDestination
+import com.example.loglife.navigation.StatsDestination
 
 /**
  * ViewModel for managing navigation state.

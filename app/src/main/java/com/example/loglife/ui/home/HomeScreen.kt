@@ -21,9 +21,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.loglife.R
 import com.example.loglife.data.dao.EventInstanceWithType
-import com.example.loglife.ui.main.MainViewModel
+import com.example.loglife.viewmodel.MainViewModel
 import com.example.loglife.ui.theme.LoglifeTheme
 import com.example.loglife.util.DateTimeUtils
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.loglife.data.model.EventInstance
+import com.example.loglife.data.model.EventMode
+import com.example.loglife.data.model.EventType
 import com.example.loglife.ui.home.ExpandableFloatingMenu
 
 /**
@@ -332,5 +336,29 @@ fun CenteredLoadingIndicator() {
 
 private fun getIconResource(iconName: String): ImageVector {
     return Icons.Default.Event
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 640)
+@Composable
+fun HomeScreenPreview() {
+    val now = DateTimeUtils.nowUtc()
+    val sampleActive = listOf(
+        EventInstanceWithType(
+            eventInstance = EventInstance(id = 1, eventTypeId = 1, startTime = now - 45 * 60 * 1000),
+            eventType = EventType(id = 1, name = "Work", icon = "work", eventMode = EventMode.DURATION, category = "Work")
+        )
+    )
+    val sampleRecent = EventInstanceWithType(
+        eventInstance = EventInstance(id = 2, eventTypeId = 2, startTime = now - 2 * 60 * 60 * 1000),
+        eventType = EventType(id = 2, name = "Coffee", icon = "coffee", eventMode = EventMode.INSTANT, category = "Food")
+    )
+    LoglifeTheme {
+        HomeScreenContent(
+            activeEvents = sampleActive,
+            recentEvent = sampleRecent,
+            onLogEventClick = {},
+            onStopEventClick = {}
+        )
+    }
 }
 
