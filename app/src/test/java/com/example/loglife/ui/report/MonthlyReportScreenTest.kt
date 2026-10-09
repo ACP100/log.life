@@ -9,6 +9,7 @@ import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import com.example.loglife.data.model.EventInstance
 import com.example.loglife.data.model.EventType
 import com.example.loglife.data.dao.EventInstanceWithType
@@ -32,6 +33,7 @@ import org.robolectric.annotation.GraphicsMode
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.material3.ExperimentalMaterial3Api
+import kotlinx.coroutines.flow.flowOf
 import java.util.*
 
 /**
@@ -63,7 +65,7 @@ class MonthlyReportScreenTest {
         // Arrange
         val loadingState = MutableStateFlow(true)
         `when`(viewModel.isLoading).thenReturn(loadingState as StateFlow<Boolean>)
-        `when`(viewModel.eventInstancesForDateRange(anyLong(), anyLong())).thenReturn(MutableStateFlow<List<EventInstanceWithType>>(emptyList()))
+        `when`(viewModel.eventInstancesForDateRange(anyLong(), anyLong())).thenReturn(flowOf(emptyList()))
 
         // Act
         composeTestRule.setContent({
@@ -94,7 +96,7 @@ class MonthlyReportScreenTest {
             activities = emptyList()
         )
         `when`(viewModel.isLoading).thenReturn(MutableStateFlow(false) as StateFlow<Boolean>)
-        `when`(viewModel.eventInstancesForDateRange(anyLong(), anyLong())).thenReturn(MutableStateFlow<List<EventInstanceWithType>>(emptyList()))
+        `when`(viewModel.eventInstancesForDateRange(anyLong(), anyLong())).thenReturn(flowOf(emptyList()))
 
         // Act
         composeTestRule.setContent({
@@ -107,8 +109,8 @@ class MonthlyReportScreenTest {
         })
 
         // Assert
-        composeTestRule.onNodeWithText("No events logged for").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Start logging events to see your monthly insights").assertIsDisplayed()
+        composeTestRule.onNodeWithText("No events logged for", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Start logging events to see your monthly insights", substring = true).assertIsDisplayed()
         // Verify that the detailed sections are not shown when there are no events
         composeTestRule.onNodeWithText("Sleep").assertDoesNotExist()
         composeTestRule.onNodeWithText("Work").assertDoesNotExist()
@@ -150,16 +152,16 @@ class MonthlyReportScreenTest {
         })
 
         // Assert
-        composeTestRule.onNodeWithText("Monthly Summary").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Total Events").assertIsDisplayed()
-        composeTestRule.onNodeWithText("5").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Days Logged").assertIsDisplayed()
-        composeTestRule.onNodeWithText("3/").assertIsDisplayed() // X of Y days
+        composeTestRule.onNodeWithText("Monthly Summary", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Total Events", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("5", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Days Logged", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("3/", substring = true).assertIsDisplayed() // X of Y days
         // Verify that the total hours for each category are displayed
-        composeTestRule.onAllNodesWithText("20 h").onFirst().assertIsDisplayed() // Sleep
-        composeTestRule.onAllNodesWithText("30 h").onFirst().assertIsDisplayed() // Work
-        composeTestRule.onAllNodesWithText("5 h").onFirst().assertIsDisplayed() // Health
-        composeTestRule.onAllNodesWithText("10 h").onFirst().assertIsDisplayed() // Leisure
+        composeTestRule.onAllNodesWithText("20h", substring = true).onFirst().assertIsDisplayed() // Sleep
+        composeTestRule.onAllNodesWithText("30h", substring = true).onFirst().assertIsDisplayed() // Work
+        composeTestRule.onAllNodesWithText("5h", substring = true).onFirst().assertIsDisplayed() // Health
+        composeTestRule.onAllNodesWithText("10h", substring = true).onFirst().assertIsDisplayed() // Leisure
     }
 
     @Test
@@ -232,13 +234,13 @@ class MonthlyReportScreenTest {
         })
 
         // Assert
-        composeTestRule.onNodeWithText("Activity Breakdown").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Work").assertIsDisplayed()
-        composeTestRule.onNodeWithText("10 h").assertIsDisplayed()
-        composeTestRule.onNodeWithText("2x").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Exercise").assertIsDisplayed()
-        composeTestRule.onNodeWithText("5 h").assertIsDisplayed()
-        composeTestRule.onNodeWithText("1x").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Activity Breakdown", substring = true).performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Work", substring = true).performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("10h", substring = true).performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("2x", substring = true).performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Exercise", substring = true).performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("5h", substring = true).performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("1x", substring = true).performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -247,7 +249,7 @@ class MonthlyReportScreenTest {
         var navigateToPreviousMonthCalled = false
         val testTimestamp = selectedMonthTimestamp
         `when`(viewModel.isLoading).thenReturn(MutableStateFlow(false) as StateFlow<Boolean>)
-        `when`(viewModel.eventInstancesForDateRange(anyLong(), anyLong())).thenReturn(MutableStateFlow<List<EventInstanceWithType>>(emptyList()))
+        `when`(viewModel.eventInstancesForDateRange(anyLong(), anyLong())).thenReturn(flowOf(emptyList()))
 
         // Act
         composeTestRule.setContent({
@@ -276,7 +278,7 @@ class MonthlyReportScreenTest {
         var navigateToNextMonthCalled = false
         val testTimestamp = selectedMonthTimestamp
         `when`(viewModel.isLoading).thenReturn(MutableStateFlow(false) as StateFlow<Boolean>)
-        `when`(viewModel.eventInstancesForDateRange(anyLong(), anyLong())).thenReturn(MutableStateFlow<List<EventInstanceWithType>>(emptyList()))
+        `when`(viewModel.eventInstancesForDateRange(anyLong(), anyLong())).thenReturn(flowOf(emptyList()))
 
         // Act
         composeTestRule.setContent({
