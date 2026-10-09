@@ -27,8 +27,6 @@ import com.example.loglife.data.model.EventInstance
 import com.example.loglife.ui.main.MainViewModel
 import com.example.loglife.ui.theme.LoglifeTheme
 import com.example.loglife.util.DateTimeUtils
-import com.example.loglife.ui.widgetsslot.WidgetSlot
-import com.example.loglife.ui.widgetsslot.WidgetSlotState
 import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
@@ -137,7 +135,10 @@ fun CalendarContent(
 
         // Calendar days
         LazyColumn(
-            modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .weight(1f)
+            
         ) {
             items(calendarData.size / 7) { weekIndex ->
                 val startIndex = weekIndex * 7

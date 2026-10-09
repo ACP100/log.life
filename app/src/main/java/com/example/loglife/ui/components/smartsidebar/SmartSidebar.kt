@@ -20,101 +20,77 @@ import androidx.compose.ui.platform.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.List
+import androidx.compose.ui.tooling.preview.Preview
 
-/**
- * Represents a destination that can be navigated to from the Smart Sidebar.
- * This is a generic container that works with any destination object/type
- * that the application already uses.
- *
- * @param destination The actual destination object (could be a route string, enum, etc.)
- * @param label The text label to display for this destination
- * @param icon The icon to display for this destination
- */
+
 data class SidebarDestination<T>(
     val destination: T,
     val label: String,
     val icon: ImageVector
 )
 
-/**
- * State holder for the Smart Sidebar component.
- * Manages the open/closed state, drag progress, and animation.
- */
 class SmartSidebarState {
     var isOpen by mutableStateOf(false)
         private set
 
-    // Drag-related state
-    var dragOffset by mutableFloatStateOf(0f)
+    var dragOffset by mutableFloatStateOf(-1f)
         private set
+
     var isDragging by mutableStateOf(false)
         private set
 
-    /**
-     * Opens the sidebar.
-     */
     fun open() {
         isOpen = true
+        dragOffset = 0f
     }
 
-    /**
-     * Closes the sidebar.
-     */
     fun close() {
         isOpen = false
+        dragOffset = -1f
     }
 
-    /**
-     * Toggles the sidebar state.
-     */
     fun toggle() {
-        isOpen = !isOpen
+        if (isOpen) {
+            close()
+        } else {
+            open()
+        }
     }
 
-    /**
-     * Updates the drag offset during a drag gesture.
-     * @param offset The drag offset (0 = closed, -1 = fully open)
-     */
+    fun startDragging() {
+        if (!isDragging) {
+            dragOffset = if (isOpen) 0f else -1f
+            isDragging = true
+        }
+    }
+
     fun updateDragOffset(offset: Float) {
-        isDragging = true
         dragOffset = offset.coerceIn(-1f, 0f)
     }
 
-    /**
-     * Called when a drag gesture ends to determine whether to open or close.
-     * @param velocity The vertical velocity of the drag (pixels per second)
-     */
     fun onDragEnd(velocity: Float) {
         isDragging = false
-        // If we're dragging open enough or have sufficient velocity, open
-        val shouldOpen = dragOffset < -0.5f || velocity > 500f
-        isOpen = shouldOpen
+
+        val shouldOpen = when {
+            velocity > 500f -> true
+            velocity < -500f -> false
+            else -> dragOffset > -0.5f
+        }
+
+        if (shouldOpen) {
+            open()
+        } else {
+            close()
+        }
     }
 }
-
-/**
- * Creates and remembers a SmartSidebarState instance.
- * @return A rememberSmartSidebarState instance
- */
 @Composable
 fun rememberSmartSidebarState(): SmartSidebarState = remember { SmartSidebarState() }
 
-/**
- * The main Smart Sidebar component that provides quick navigation to existing screens.
- *
- * @param destinations List of exactly three destinations to display in the sidebar
- * @param currentDestination The currently selected destination (for highlighting)
- * @param onDestinationSelected Callback when a destination is selected
- * @param state The state holder for the sidebar (optional, will be created if not provided)
- * @param handleWidth Width of the drag handle when closed
- * @param panelWidth Width of the sidebar panel when open
- * @param cornerRadius Corner radius for the sidebar panel
- * @param elevation Elevation/shadow for the sidebar panel
- * @param backgroundColor Background color of the sidebar panel
- * @param contentColor Color for icons and text
- * @param selectedBackgroundColor Background color for selected item
- * @param selectedContentColor Content color for selected item
- */
 @Composable
 fun <T> SmartSidebar(
     destinations: List<SidebarDestination<T>>,
@@ -123,15 +99,16 @@ fun <T> SmartSidebar(
     modifier: Modifier = Modifier,
     state: SmartSidebarState = rememberSmartSidebarState(),
     handleWidth: Dp = 20.dp,
-    panelWidth: Dp = 280.dp,
+    panelWidth: Dp = 50.dp,
     cornerRadius: Dp = 12.dp,
     elevation: Dp = 8.dp,
     backgroundColor: Color = MaterialTheme.colorScheme.background,
     contentColor: Color = MaterialTheme.colorScheme.onBackground,
     selectedBackgroundColor: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-    selectedContentColor: Color = MaterialTheme.colorScheme.primary
+    selectedContentColor: Color = MaterialTheme.colorScheme.primary,
+    content: @Composable () -> Unit = {}
 ) {
-    require(destinations.size == 3) { "SmartSidebar requires exactly 3 destinations" }
+    require(destinations.size in 3..4) { "SmartSidebar requires 3 or 4 destinations" }
 
     val density = LocalDensity.current
     val panelWidthPx = with(density) { panelWidth.toPx() }
@@ -158,8 +135,10 @@ fun <T> SmartSidebar(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.systemBars)
     ) {
+        // App Content
+        content()
+
         // Scrim overlay when open
         if (state.isOpen || state.isDragging || animateOffset > -1f) {
             val alpha = (animateOffset + 1f).coerceIn(0f, 1f) * 0.5f
@@ -187,8 +166,8 @@ fun <T> SmartSidebar(
             selectedContentColor = selectedContentColor,
             modifier = Modifier
                 .offset(x = offsetDp)
-                .fillMaxHeight()
-                .width(panelWidth)
+                .height(200.dp)
+                .width(50.dp)
         )
 
         // Drag handle
@@ -197,8 +176,9 @@ fun <T> SmartSidebar(
             panelWidth = panelWidth,
             modifier = Modifier
                 .offset(x = offsetDp + panelWidth)
-                .fillMaxHeight()
-                .width(handleWidth)
+                .height(100.dp)
+//                .fillMaxHeight()
+                .width(5.dp)
         )
     }
 }
@@ -234,13 +214,9 @@ private fun <T> SidebarPanel(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(vertical = 16.dp, horizontal = 20.dp)
+//                .padding(vertical = 16.dp, horizontal = 5.dp)
         ) {
-            // Spacer at the top
-            Spacer(modifier = Modifier.height(8.dp))
 
-            // Destination items
             destinations.forEach { destination ->
                 SidebarDestinationItem(
                     destination = destination,
@@ -255,8 +231,6 @@ private fun <T> SidebarPanel(
                 )
             }
 
-            // Spacer at the bottom
-            Spacer(modifier = Modifier.weight(1f))
         }
     }
 }
@@ -285,38 +259,44 @@ private fun SidebarHandle(
             )
             .draggable(
                 state = rememberDraggableState { delta ->
-                    // Calculate offset (-1 to 0 range)
                     val currentOffsetPx = state.dragOffset * panelWidthPx
-                    val newOffsetPx = (currentOffsetPx + delta).coerceIn(-panelWidthPx, 0f)
+
+                    val newOffsetPx = (currentOffsetPx + delta)
+                        .coerceIn(-panelWidthPx, 0f)
+
                     state.updateDragOffset(newOffsetPx / panelWidthPx)
                 },
                 orientation = Orientation.Horizontal,
+                onDragStarted = {
+                    state.startDragging()
+                },
                 onDragStopped = { velocity ->
                     state.onDragEnd(velocity)
                 }
             )
             .clip(RectangleShape)
-    ) {
-        // Vertical handle indicator
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.Center)
-                .padding(vertical = 12.dp)
-        ) {
-            repeat(3) {
-                Box(
-                    modifier = Modifier
-                        .size(4.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                            shape = RectangleShape
-                        )
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-            }
-        }
-    }
+            .height(20.dp)
+            .width(5.dp)
+    ) {}
+//        // Vertical handle indicator
+//        Column(
+//            modifier = Modifier
+//                .align(Alignment.Center)
+//                .padding(vertical = 12.dp)
+//        ) {
+//            repeat(3) {
+//                Box(
+//                    modifier = Modifier
+//                        .size(4.dp)
+//                        .background(
+//                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+//                            shape = RectangleShape
+//                        )
+//                )
+//                Spacer(modifier = Modifier.height(4.dp))
+//            }
+//        }
+//    }
 }
 
 /**
@@ -335,12 +315,13 @@ private fun <T> SidebarDestinationItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp)
+//            .height(40.dp)
             .background(
                 color = if (isSelected) selectedBackgroundColor else Color.Transparent
             )
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 4.dp)
+
     ) {
         // Icon
         Icon(
@@ -348,19 +329,158 @@ private fun <T> SidebarDestinationItem(
             contentDescription = "${destination.label} icon",
             tint = if (isSelected) selectedContentColor else contentColor,
             modifier = Modifier
-                .size(24.dp)
-        )
-
-        // Label
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = destination.label,
-            color = if (isSelected) selectedContentColor else contentColor,
-            fontSize = 16.sp,
-            fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
-            modifier = Modifier
-                .height(24.dp)
+                .size(50.dp)
                 .align(Alignment.CenterVertically)
+
+        )
+    }
+}
+
+
+
+@Preview(
+    name = "Smart Sidebar",
+    showBackground = true,
+    showSystemUi = true,
+    widthDp = 360,
+    heightDp = 800
+)
+@Composable
+private fun SmartSidebarPreview() {
+    val destinations = listOf(
+        SidebarDestination(
+            destination = "home",
+            label = "Home",
+            icon = Icons.Default.Home
+        ),
+        SidebarDestination(
+            destination = "log",
+            label = "Log Activity",
+            icon = Icons.Default.Add
+        ),
+        SidebarDestination(
+            destination = "history",
+            label = "History",
+            icon = Icons.Default.List
+        )
+    )
+
+    var currentDestination by remember {
+        mutableStateOf("home")
+    }
+
+    val sidebarState = rememberSmartSidebarState()
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        // Fake screen content
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "LogLife",
+                style = MaterialTheme.typography.headlineMedium
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Main screen",
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+
+        SmartSidebar(
+            destinations = destinations,
+            currentDestination = currentDestination,
+            onDestinationSelected = {
+                currentDestination = it
+            },
+            state = sidebarState
+        )
+    }
+}
+
+
+
+
+
+@Preview(
+    name = "Smart Sidebar - Open",
+    showBackground = true,
+    showSystemUi = true,
+    widthDp = 360,
+    heightDp = 800
+)
+@Composable
+private fun SmartSidebarOpenPreview() {
+    val destinations = listOf(
+        SidebarDestination(
+            destination = "home",
+            label = "Home",
+            icon = Icons.Default.Home
+        ),
+        SidebarDestination(
+            destination = "log",
+            label = "Log Activity",
+            icon = Icons.Default.Add
+        ),
+        SidebarDestination(
+            destination = "history",
+            label = "History",
+            icon = Icons.Default.List
+        )
+    )
+
+    var currentDestination by remember {
+        mutableStateOf("home")
+    }
+
+    val sidebarState = rememberSmartSidebarState()
+
+    LaunchedEffect(Unit) {
+        sidebarState.open()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "LogLife",
+                style = MaterialTheme.typography.headlineMedium
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Main screen",
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+
+        SmartSidebar(
+            destinations = destinations,
+            currentDestination = currentDestination,
+            onDestinationSelected = {
+                currentDestination = it
+            },
+            state = sidebarState
         )
     }
 }

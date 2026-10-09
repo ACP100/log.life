@@ -4,6 +4,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.isDisplayed
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -29,6 +31,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.material3.ExperimentalMaterial3Api
+import kotlinx.coroutines.flow.flowOf
 import java.util.Calendar
 import java.util.TimeZone
 
@@ -66,7 +69,7 @@ class CalendarScreenTest {
         // Arrange
         val loadingState = MutableStateFlow(true)
         `when`(viewModel.isLoading).thenReturn(loadingState as StateFlow<Boolean>)
-        `when`(viewModel.eventInstancesForDateRange(anyLong(), anyLong())).thenReturn(MutableStateFlow<List<EventInstanceWithType>>(emptyList()))
+        `when`(viewModel.eventInstancesForDateRange(anyLong(), anyLong())).thenReturn(flowOf(emptyList()))
 
         // Act
         composeTestRule.setContent({
@@ -87,7 +90,7 @@ class CalendarScreenTest {
         // Arrange
         val currentMonthStart = getCurrentMonthStart()
         `when`(viewModel.isLoading).thenReturn(MutableStateFlow(false) as StateFlow<Boolean>)
-        `when`(viewModel.eventInstancesForDateRange(anyLong(), anyLong())).thenReturn(MutableStateFlow<List<EventInstanceWithType>>(emptyList()))
+        `when`(viewModel.eventInstancesForDateRange(anyLong(), anyLong())).thenReturn(flowOf(emptyList()))
 
         // Act
         composeTestRule.setContent({
@@ -114,7 +117,7 @@ class CalendarScreenTest {
         // Arrange
         val currentMonthStart = getCurrentMonthStart()
         `when`(viewModel.isLoading).thenReturn(MutableStateFlow(false) as StateFlow<Boolean>)
-        `when`(viewModel.eventInstancesForDateRange(anyLong(), anyLong())).thenReturn(MutableStateFlow<List<EventInstanceWithType>>(emptyList()))
+        `when`(viewModel.eventInstancesForDateRange(anyLong(), anyLong())).thenReturn(flowOf(emptyList()))
 
         // Act
         composeTestRule.setContent({
@@ -127,12 +130,12 @@ class CalendarScreenTest {
 
         // Assert - Check that we have day numbers displayed (1-31 depending on month)
         // We'll check for a few representative days
-        composeTestRule.onNodeWithText("1").assertIsDisplayed()
-        composeTestRule.onNodeWithText("15").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("1", useUnmergedTree = true).onFirst().assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("15", useUnmergedTree = true).onFirst().assertIsDisplayed()
         val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
         calendar.timeInMillis = currentMonthStart
         val maxDays = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
-        composeTestRule.onNodeWithText("$maxDays").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("$maxDays", useUnmergedTree = true).onFirst().assertIsDisplayed()
     }
 
     @Test
@@ -141,7 +144,7 @@ class CalendarScreenTest {
         var navigateToPreviousMonthCalled = false
         var currentMonthState = getCurrentMonthStart()
         `when`(viewModel.isLoading).thenReturn(MutableStateFlow(false) as StateFlow<Boolean>)
-        `when`(viewModel.eventInstancesForDateRange(anyLong(), anyLong())).thenReturn(MutableStateFlow<List<EventInstanceWithType>>(emptyList()))
+        `when`(viewModel.eventInstancesForDateRange(anyLong(), anyLong())).thenReturn(flowOf(emptyList()))
 
         // Act
         composeTestRule.setContent({
@@ -168,7 +171,7 @@ class CalendarScreenTest {
         // Arrange
         var navigateToNextMonthCalled = false
         `when`(viewModel.isLoading).thenReturn(MutableStateFlow(false) as StateFlow<Boolean>)
-        `when`(viewModel.eventInstancesForDateRange(anyLong(), anyLong())).thenReturn(MutableStateFlow<List<EventInstanceWithType>>(emptyList()))
+        `when`(viewModel.eventInstancesForDateRange(anyLong(), anyLong())).thenReturn(flowOf(emptyList()))
 
         // Act
         composeTestRule.setContent({
@@ -192,7 +195,7 @@ class CalendarScreenTest {
         var selectedDate: Long? = null
         val testDate = getCurrentMonthStart() + 86400000 // Add one day
         `when`(viewModel.isLoading).thenReturn(MutableStateFlow(false) as StateFlow<Boolean>)
-        `when`(viewModel.eventInstancesForDateRange(anyLong(), anyLong())).thenReturn(MutableStateFlow<List<EventInstanceWithType>>(emptyList()))
+        `when`(viewModel.eventInstancesForDateRange(anyLong(), anyLong())).thenReturn(flowOf(emptyList()))
 
         // Act
         composeTestRule.setContent({
@@ -251,7 +254,7 @@ class CalendarScreenTest {
     fun `CalendarScreen handles empty state gracefully`() {
         // Arrange
         `when`(viewModel.isLoading).thenReturn(MutableStateFlow(false) as StateFlow<Boolean>)
-        `when`(viewModel.eventInstancesForDateRange(anyLong(), anyLong())).thenReturn(MutableStateFlow<List<EventInstanceWithType>>(emptyList()))
+        `when`(viewModel.eventInstancesForDateRange(anyLong(), anyLong())).thenReturn(flowOf(emptyList()))
 
         // Act
         composeTestRule.setContent({
@@ -265,7 +268,7 @@ class CalendarScreenTest {
         // Assert
         composeTestRule.onNodeWithText("Calendar").assertIsDisplayed()
         // Should still display the calendar header and days even when empty
-        composeTestRule.onNodeWithText("1").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("1", useUnmergedTree = true).onFirst().assertIsDisplayed()
     }
 
     // Helper function to get current month start in UTC

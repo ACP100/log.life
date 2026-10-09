@@ -27,9 +27,6 @@ class LogEventActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             LoglifeTheme {
-                // We use a simple Scaffold here since this is a focused activity
-                // For consistency, we could reuse the main nav graph, but for a widget-launched
-                // screen, keeping it simple is better
                 LogEventScreen(
                     viewModel = viewModel,
                     onEventSelected = { eventTypeId ->

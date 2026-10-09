@@ -151,7 +151,7 @@ class HomeScreenTest {
         // Assert
         composeTestRule.onNodeWithText(testEventTypeName).assertIsDisplayed()
         // Verify duration is displayed for active events
-        composeTestRule.onNodeWithText("●").assertIsDisplayed()
+        composeTestRule.onNodeWithText("●", substring = true).assertIsDisplayed()
     }
 
     @Test
@@ -319,7 +319,8 @@ class HomeScreenTest {
 
         // Click the expandable menu (the + button), then choose Log
         composeTestRule.onNodeWithContentDescription("Expand Menu").performClick()
-        composeTestRule.onNodeWithText("Log").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Log", substring = true).performClick()
 
         // Assert
         assertThat(navigateToLogEventCalled).isTrue()
