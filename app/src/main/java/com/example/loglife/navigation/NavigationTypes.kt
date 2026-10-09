@@ -1,4 +1,4 @@
-package com.example.loglife.ui.navigation
+package com.example.loglife.navigation
 
 import androidx.compose.ui.graphics.vector.ImageVector
 

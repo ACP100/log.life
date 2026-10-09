@@ -26,18 +26,20 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.loglife.R
 import com.example.loglife.data.model.EventType
-import com.example.loglife.ui.main.MainViewModel
+import com.example.loglife.viewmodel.MainViewModel
 import com.example.loglife.ui.theme.LoglifeTheme
-import com.example.loglife.util.DateTimeUtils
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.loglife.data.model.EventMode
 import java.util.*
 
 /**
  * Screen for selecting and logging an event type.
  * Shows a list of available event types that can be logged with one tap.
+ * This component is typically used within a larger screen layout for activity logging.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LogEventScreen(
+fun EventSelectionScreen(
     viewModel: MainViewModel = hiltViewModel(),
     onEventSelected: (Long) -> Unit, // eventTypeId
     onNavigateBack: () -> Unit,
@@ -308,4 +310,19 @@ fun CenterAlignedTopAppBar(
         actions = actions,
         modifier = modifier
     )
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 640)
+@Composable
+fun EventSelectionScreenPreview() {
+    val sampleTypes = listOf(
+        EventType(id = 1, name = "Coffee", icon = "add", eventMode = EventMode.INSTANT, category = "Food"),
+        EventType(id = 2, name = "Work", icon = "add", eventMode = EventMode.DURATION, category = "Work")
+    )
+    LoglifeTheme {
+        LogEventList(
+            eventTypes = sampleTypes,
+            onEventClick = {}
+        )
+    }
 }

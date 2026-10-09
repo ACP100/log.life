@@ -79,9 +79,9 @@ class SmartSidebarTest {
         })
 
         // Assert
-        composeTestRule.onNodeWithText("Home").assertExists()
-        composeTestRule.onNodeWithText("Calendar").assertExists()
-        composeTestRule.onNodeWithText("Settings").assertExists()
+        composeTestRule.onNodeWithContentDescription("Home icon").assertExists()
+        composeTestRule.onNodeWithContentDescription("Calendar icon").assertExists()
+        composeTestRule.onNodeWithContentDescription("Settings icon").assertExists()
     }
 
     @Test
@@ -96,7 +96,7 @@ class SmartSidebarTest {
         })
 
         // Assert
-        composeTestRule.onNodeWithText("Calendar").assertExists()
+        composeTestRule.onNodeWithContentDescription("Calendar icon").assertExists()
         // Note: In a real test, we'd check the background/color of the selected item
         // For now, we verify the text is present
     }
@@ -118,7 +118,7 @@ class SmartSidebarTest {
         })
 
         // Click on the Calendar destination item
-        composeTestRule.onNodeWithText("Calendar").performClick()
+        composeTestRule.onNodeWithContentDescription("Calendar icon").performClick()
 
         // Assert
         assertThat(selectedDestination).isEqualTo("calendar")

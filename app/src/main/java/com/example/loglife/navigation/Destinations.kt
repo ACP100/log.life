@@ -1,6 +1,4 @@
-package com.example.loglife.viewmodel
-
-import com.example.loglife.ui.navigation.Destination
+package com.example.loglife.navigation
 
 /**
  * Destination for the Home screen.

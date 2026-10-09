@@ -24,10 +24,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.loglife.R
 import com.example.loglife.data.model.EventInstance
-import com.example.loglife.ui.main.MainViewModel
+import com.example.loglife.viewmodel.MainViewModel
 import com.example.loglife.ui.theme.LoglifeTheme
 import com.example.loglife.util.DateTimeUtils
 import java.util.Calendar
+import androidx.compose.ui.tooling.preview.Preview
 import java.util.Locale
 import java.util.TimeZone
 import kotlin.math.min
@@ -40,12 +41,12 @@ data class CalendarDayData(
 )
 
 /**
- * Calendar screen for navigating through days and months.
- * Shows a month-view calendar with visual indicators for days that have logged events.
+ * Calendar grid showing month view with visual indicators for days that have logged events.
+ * This component is typically used within a larger screen layout.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CalendarScreen(
+fun CalendarGrid(
     viewModel: MainViewModel = hiltViewModel(),
     onDateSelected: (Long) -> Unit, // timestamp in milliseconds for start of day
     onNavigateBack: () -> Unit,
@@ -57,6 +58,7 @@ fun CalendarScreen(
     val isLoading = rememberIsLoadingState(viewModel)
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Calendar") },
@@ -244,6 +246,13 @@ fun DayCell(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    if (!isCurrentMonth) {
+        Spacer(modifier = modifier)
+        return
+    }
+
+    val shape = MaterialTheme.shapes.small
+
     val contentAlpha = if (isCurrentMonth) 1.0f else 0.3f
     val backgroundColor = if (isToday) {
         MaterialTheme.colorScheme.primaryContainer
@@ -254,28 +263,28 @@ fun DayCell(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = modifier
+            .clip(shape)
             .background(backgroundColor)
-            .clickable { onClick() }
-            .alpha(contentAlpha)
             .border(
                 width = if (isToday) 2.dp else 0.5.dp,
-                color = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                shape = MaterialTheme.shapes.small
+                color = if (isToday) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.outline,
+                shape = shape
             )
+            .clickable(onClick = onClick)
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
                 .padding(4.dp)
+                .align(Alignment.Center),
         ) {
             // Day number
             Text(
                 text = dayOfMonth.toString(),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.align(Alignment.Start)
+                modifier = Modifier.align(Alignment.CenterHorizontally),
             )
             Spacer(modifier = Modifier.height(4.dp))
 
@@ -461,4 +470,18 @@ fun CenterAlignedTopAppBar(
         actions = actions,
         modifier = modifier
     )
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 640)
+@Composable
+fun CalendarGridPreview() {
+    LoglifeTheme {
+        CalendarContent(
+            currentMonth = DateTimeUtils.getStartOfMonth(DateTimeUtils.nowUtc()),
+            eventsByDate = emptyMap(),
+            onDateClick = {},
+            onPreviousMonth = {},
+            onNextMonth = {}
+        )
+    }
 }

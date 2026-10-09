@@ -2,6 +2,8 @@ package com.example.loglife.di
 
 import android.content.Context
 import com.example.loglife.data.LogLifeDatabase
+import com.example.loglife.data.dao.EventInstanceDao
+import com.example.loglife.data.dao.EventTypeDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,13 +23,13 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideEventTypeDao(database: LogLifeDatabase): com.example.loglife.data.dao.EventTypeDao {
+    fun provideEventTypeDao(database: LogLifeDatabase): EventTypeDao {
         return database.eventTypeDao()
     }
 
     @Provides
     @Singleton
-    fun provideEventInstanceDao(database: LogLifeDatabase): com.example.loglife.data.dao.EventInstanceDao {
+    fun provideEventInstanceDao(database: LogLifeDatabase): EventInstanceDao {
         return database.eventInstanceDao()
     }
 }

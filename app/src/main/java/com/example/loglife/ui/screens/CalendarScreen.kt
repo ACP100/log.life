@@ -28,19 +28,23 @@ import com.example.loglife.R
 import com.example.loglife.data.model.EventInstance
 import com.example.loglife.data.model.EventType
 import com.example.loglife.data.dao.EventInstanceWithType
-import com.example.loglife.ui.main.MainViewModel
+import com.example.loglife.viewmodel.MainViewModel
 import com.example.loglife.ui.theme.LoglifeTheme
 import com.example.loglife.util.DateTimeUtils
-import com.example.loglife.ui.calendar.CalendarScreen as RealCalendarScreen
+import com.example.loglife.data.model.EventMode
+import com.example.loglife.ui.calendar.CalendarContent
+import com.example.loglife.ui.calendar.CalendarGrid
 import java.util.*
+import androidx.compose.ui.tooling.preview.Preview
 
 /**
  * Calendar screen showing month view with day detail when a date is selected.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CalendarScreen() {
-    val viewModel: MainViewModel = hiltViewModel()
+fun CalendarScreen(
+    viewModel: MainViewModel = hiltViewModel()
+) {
     var selectedDate by remember { mutableStateOf<Long?>(null) }
 
     Scaffold(
@@ -56,7 +60,7 @@ fun CalendarScreen() {
                 .padding(innerPadding)
         ) {
             // Month view calendar (real implementation)
-            RealCalendarScreen(
+            CalendarGrid(
                 viewModel = viewModel,
                 onDateSelected = { date ->
                     selectedDate = date
@@ -74,84 +78,144 @@ fun CalendarScreen() {
                 val endOfDay = DateTimeUtils.getEndOfDay(date)
                 val events by viewModel.eventInstancesForDateRange(startOfDay, endOfDay)
                     .collectAsStateWithLifecycle(initialValue = emptyList())
-                if (events.isNotEmpty()) {
-                    Column(
+                CalendarDayDetailSection(
+                    date = date,
+                    events = events
+                )
+            }
+        }
+    }
+}
+
+/**
+ * ViewModel-free day detail: event list for a selected date, or an empty state.
+ */
+@Composable
+fun CalendarDayDetailSection(
+    date: Long,
+    events: List<EventInstanceWithType>,
+    modifier: Modifier = Modifier
+) {
+    if (events.isNotEmpty()) {
+        Column(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Text(
+                text = "Events for ${DateTimeUtils.formatDate(date)}",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+                items(events) { eventWithType ->
+                    val event = eventWithType.eventInstance
+                    val eventType = eventWithType.eventType
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp)
+                            .padding(8.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        ),
+                        shape = MaterialTheme.shapes.medium
                     ) {
-                        Text(
-                            text = "Events for ${DateTimeUtils.formatDate(date)}",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        LazyColumn(
+                        Row(
                             modifier = Modifier
+                                .padding(16.dp)
                                 .fillMaxWidth()
                         ) {
-                            items(events) { eventWithType ->
-                                val event = eventWithType.eventInstance
-                                val eventType = eventWithType.eventType
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(8.dp),
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                                    ),
-                                    shape = MaterialTheme.shapes.medium
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .padding(16.dp)
-                                            .fillMaxWidth()
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Event,
-                                            contentDescription = eventType.name,
-                                            tint = MaterialTheme.colorScheme.onSurface,
-                                            modifier = Modifier.size(24.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(12.dp))
-                                        Column {
-                                            Text(
-                                                text = eventType.name,
-                                                style = MaterialTheme.typography.titleMedium,
-                                                color = MaterialTheme.colorScheme.onSurface
-                                            )
-                                            if (eventType.category != null) {
-                                                Text(
-                                                    text = eventType.category,
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                            Text(
-                                                text = DateTimeUtils.formatTime(event.startTime),
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                    }
+                            Icon(
+                                imageVector = Icons.Default.Event,
+                                contentDescription = eventType.name,
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = eventType.name,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                if (eventType.category != null) {
+                                    Text(
+                                        text = eventType.category,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 }
+                                Text(
+                                    text = DateTimeUtils.formatTime(event.startTime),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
                     }
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "No events for ${DateTimeUtils.formatDate(date)}",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                 }
+            }
+        }
+    } else {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No events for ${DateTimeUtils.formatDate(date)}",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true, widthDp = 360, heightDp = 640)
+@Composable
+fun CalendarScreenPreview() {
+    // Never call CalendarScreen() here: it resolves MainViewModel via hiltViewModel(),
+    // which crashes the preview. Render the stateless pieces with sample data instead.
+    val now = DateTimeUtils.nowUtc()
+    val monthStart = DateTimeUtils.getStartOfMonth(now)
+    val sampleDate = DateTimeUtils.getStartOfDay(now)
+    val sampleEvents = listOf(
+        EventInstanceWithType(
+            eventInstance = EventInstance(id = 1, eventTypeId = 1, startTime = now - 60 * 60 * 1000),
+            eventType = EventType(id = 1, name = "Coffee", icon = "coffee", eventMode = EventMode.INSTANT, category = "Food")
+        )
+    )
+    LoglifeTheme {
+        Scaffold(
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = { Text("Calendar") }
+                )
+            }
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                CalendarContent(
+                    currentMonth = monthStart,
+                    eventsByDate = mapOf(sampleDate to sampleEvents.map { it.eventInstance }),
+                    onDateClick = {},
+                    onPreviousMonth = {},
+                    onNextMonth = {},
+                    modifier = Modifier.fillMaxWidth()
+                )
+                CalendarDayDetailSection(
+                    date = sampleDate,
+                    events = sampleEvents
+                )
             }
         }
     }

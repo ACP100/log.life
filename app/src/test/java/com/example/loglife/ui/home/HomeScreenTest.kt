@@ -13,7 +13,7 @@ import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.test.swipeDown
 import com.example.loglife.data.dao.EventInstanceWithType
-import com.example.loglife.ui.main.MainViewModel
+import com.example.loglife.viewmodel.MainViewModel
 import com.example.loglife.util.DateTimeUtils
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -320,7 +320,7 @@ class HomeScreenTest {
         // Click the expandable menu (the + button), then choose Log
         composeTestRule.onNodeWithContentDescription("Expand Menu").performClick()
         composeTestRule.waitForIdle()
-        composeTestRule.onNodeWithText("Log", substring = true).performClick()
+        composeTestRule.onNodeWithText("Log").performClick()
 
         // Assert
         assertThat(navigateToLogEventCalled).isTrue()

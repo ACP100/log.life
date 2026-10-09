@@ -1,4 +1,4 @@
-package com.example.loglife.ui.main
+package com.example.loglife.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
