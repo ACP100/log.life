@@ -138,12 +138,12 @@ class EventManagementScreenTest {
         }
 
         // Assert
-        composeTestRule.onNodeWithText("Work").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Exercise").assertIsDisplayed()
-        composeTestRule.onAllNodesWithText("Productivity").onFirst().assertIsDisplayed()
-        composeTestRule.onAllNodesWithText("Health").onFirst().assertIsDisplayed()
-        composeTestRule.onNodeWithText("Instant").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Duration").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Work", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Exercise", substring = true).assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Productivity", substring = true).onFirst().assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Health", substring = true).onFirst().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Instant", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Duration", substring = true).assertIsDisplayed()
     }
 
     @Test

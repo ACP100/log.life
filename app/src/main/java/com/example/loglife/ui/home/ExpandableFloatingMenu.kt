@@ -24,6 +24,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -44,14 +45,20 @@ fun ExpandableFloatingMenu(
     // State for expanded/collapsed state
     var isExpanded by remember { mutableStateOf(false) }
 
-    // State for draggable position
+    // State for draggable position (bottom-right corner)
     var menuOffset by remember { mutableStateOf(Offset(0f, 0f)) }
-    
+
     // Track if the menu has been positioned for the first time
     var isPositioned by remember { mutableStateOf(false) }
 
+    // Parent container size
+    var parentSize by remember { mutableStateOf(IntSize.Zero) }
+
+    val density = LocalDensity.current
+
     // Animation for size transition
     val transition = updateTransition(isExpanded, label = "menuSize")
+    
     val width by transition.animateDp(
         label = "width",
         transitionSpec = {
@@ -61,23 +68,34 @@ fun ExpandableFloatingMenu(
             )
         }
     ) { expanded ->
-        if (expanded) 220.dp else 56.dp
+        if (expanded) 240.dp else 56.dp
     }
-
-    var parentSize by remember { mutableStateOf(IntSize.Zero) }
-    var menuSize by remember { mutableStateOf(IntSize.Zero) }
+    
+    val height by transition.animateDp(
+        label = "height",
+        transitionSpec = {
+            spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessMedium
+            )
+        }
+    ) { expanded ->
+        if (expanded) 80.dp else 56.dp
+    }
 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .onSizeChanged { 
+            .onSizeChanged {
                 parentSize = it
                 if (!isPositioned && it.width > 0 && it.height > 0) {
-                    // Initial position: Bottom right
-                    menuOffset = Offset(
-                        (it.width - 80).toFloat(), 
-                        (it.height - 150).toFloat()
-                    )
+                    // Initial position: Bottom right with 16dp margin from edges
+                    with(density) {
+                        menuOffset = Offset(
+                            (it.width - 16.dp.toPx()).toFloat(),
+                            (it.height - 16.dp.toPx()).toFloat()
+                        )
+                    }
                     isPositioned = true
                 }
             }
@@ -95,10 +113,14 @@ fun ExpandableFloatingMenu(
 
         Box(
             modifier = Modifier
-                .offset { IntOffset(menuOffset.x.roundToInt(), menuOffset.y.roundToInt()) }
+                .offset {
+                    IntOffset(
+                        (menuOffset.x - width.toPx()).roundToInt(),
+                        (menuOffset.y - height.toPx()).roundToInt()
+                    )
+                }
                 .width(width)
-                .height(56.dp)
-                .onSizeChanged { menuSize = it }
+                .height(height)
                 .shadow(elevation = 6.dp, shape = RoundedCornerShape(28.dp))
                 .background(
                     color = MaterialTheme.colorScheme.primaryContainer,
@@ -114,37 +136,44 @@ fun ExpandableFloatingMenu(
                         onDragEnd = {
                             // Snap to nearest side edge
                             val snapThreshold = parentSize.width / 2
-                            val targetX = if (menuOffset.x + menuSize.width / 2 < snapThreshold) {
-                                16f // Margin from left
-                            } else {
-                                (parentSize.width - menuSize.width - 16).toFloat() // Margin from right
+                            val currentWidthPx = width.toPx()
+                            val menuCenterX = menuOffset.x - currentWidthPx / 2
+                            
+                            with(density) {
+                                val targetX = if (menuCenterX < snapThreshold) {
+                                    16.dp.toPx() + currentWidthPx // Snap to left edge
+                                } else {
+                                    parentSize.width - 16.dp.toPx() // Snap to right edge
+                                }
+                                menuOffset = Offset(targetX, menuOffset.y)
                             }
-                            menuOffset = Offset(targetX, menuOffset.y)
                         },
                         onDrag = { change, dragAmount ->
                             change.consume()
+                            val currentWidthPx = width.toPx()
+                            val currentHeightPx = height.toPx()
+                            
                             val newX = (menuOffset.x + dragAmount.x).coerceIn(
-                                0f,
-                                (parentSize.width - menuSize.width).toFloat()
+                                currentWidthPx,
+                                parentSize.width.toFloat()
                             )
                             val newY = (menuOffset.y + dragAmount.y).coerceIn(
-                                0f,
-                                (parentSize.height - menuSize.height).toFloat()
+                                currentHeightPx,
+                                parentSize.height.toFloat()
                             )
                             menuOffset = Offset(newX, newY)
                         }
                     )
                 }
-                .pointerInput(isExpanded) {
-                    detectTapGestures(onTap = {
-                        if (!isExpanded) isExpanded = true
-                    })
-                }
+                .clickable(
+                    enabled = !isExpanded,
+                    onClick = { isExpanded = true }
+                )
         ) {
             if (isExpanded) {
                 Row(
                     modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     MenuOption(
@@ -195,7 +224,7 @@ private fun MenuOption(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp)
+            .padding(horizontal = 4.dp)
     ) {
         Icon(
             imageVector = icon,

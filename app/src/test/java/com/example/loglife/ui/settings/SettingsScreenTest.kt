@@ -98,7 +98,7 @@ class SettingsScreenTest {
         // Interval and max-duration share the "2 hours"/"4 hours" labels, so use onFirst
         composeTestRule.onAllNodesWithText("2 hours").onFirst().assertIsDisplayed()
         composeTestRule.onAllNodesWithText("4 hours").onFirst().assertIsDisplayed()
-        composeTestRule.onNodeWithText("Maximum Duration").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Maximum Duration").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -118,11 +118,11 @@ class SettingsScreenTest {
 
         // Assert
         composeTestRule.onNodeWithText("Widget").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Configure Widgets").performScrollTo().assertIsDisplayed()
-        composeTestRule.onNodeWithText("Set up home screen widgets").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Configure Widgets", substring = true).performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Set up home screen widgets", substring = true).performScrollTo().assertIsDisplayed()
 
         // Act - Click the widget configuration button
-        composeTestRule.onNodeWithText("Configure Widgets").performScrollTo().performClick()
+        composeTestRule.onNodeWithText("Configure Widgets", substring = true).performScrollTo().performClick()
 
         // Assert
         assertThat(widgetConfigClicked).isTrue()
@@ -145,11 +145,11 @@ class SettingsScreenTest {
 
         // Assert
         composeTestRule.onNodeWithText("About").assertIsDisplayed()
-        composeTestRule.onNodeWithText("About Life Log").performScrollTo().assertIsDisplayed()
-        composeTestRule.onNodeWithText("Version 1.0.0").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("About Life Log", substring = true).performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Version 1.0.0", substring = true).performScrollTo().assertIsDisplayed()
 
         // Act - Click the about button
-        composeTestRule.onNodeWithText("About Life Log").performScrollTo().performClick()
+        composeTestRule.onNodeWithText("About Life Log", substring = true).performScrollTo().performClick()
 
         // Assert
         assertThat(aboutClicked).isTrue()

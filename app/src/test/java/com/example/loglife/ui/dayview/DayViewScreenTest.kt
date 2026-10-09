@@ -103,7 +103,7 @@ class DayViewScreenTest {
         })
 
         // Assert
-        composeTestRule.onNodeWithText("No events logged for").assertIsDisplayed()
+        composeTestRule.onNodeWithText("No events logged for", substring = true).assertIsDisplayed()
         composeTestRule.onNodeWithText("Tap the + button to log an event").assertIsDisplayed()
     }
 

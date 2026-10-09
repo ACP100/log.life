@@ -24,8 +24,6 @@ import com.example.loglife.data.dao.EventInstanceWithType
 import com.example.loglife.ui.main.MainViewModel
 import com.example.loglife.ui.theme.LoglifeTheme
 import com.example.loglife.util.DateTimeUtils
-import com.example.loglife.ui.widgetsslot.WidgetSlot
-import com.example.loglife.ui.widgetsslot.WidgetSlotState
 import com.example.loglife.ui.home.ExpandableFloatingMenu
 
 /**
@@ -57,35 +55,31 @@ fun HomeScreen(
             )
         },
         content = { innerPadding ->
-            val contentModifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(16.dp)
 
             if (isLoading) {
                 CenteredLoadingIndicator()
             } else {
-                Column(
-                    modifier = contentModifier,
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
-                    // Upper half - Event display (information only, no action buttons)
+                Box(modifier = Modifier.fillMaxSize()) {
+                    // Event display (information only, no action buttons)
                     HomeScreenContent(
                         activeEvents = activeEvents,
                         recentEvent = recentEvent,
                         onLogEventClick = { /* Not used in UI - only for callbacks */ },
-                        onStopEventClick = { /* Not used in UI - only for callbacks */ }
+                        onStopEventClick = { /* Not used in UI - only for callbacks */ },
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding)
+                            .padding(16.dp)
                     )
 
-                    // Lower half - Expandable floating menu (replaces the + Log Event button)
+                    // Expandable floating menu (replaces the + Log Event button)
                     ExpandableFloatingMenu(
                         onNavigateToCalendar = onNavigateToCalendar,
-                        onNavigateToStatistics = onNavigateToReport, // Using MonthlyReport as statistics for now
+                        onNavigateToStatistics = onNavigateToReport,
                         onLogEvent = {
-                            // Use the first available event type for quick logging, or fall back to a default
-                            // For now, we'll use the navigateToLogEvent callback which goes to LogEventScreen
                             onNavigateToLogEvent()
-                        }
+                        },
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
             }
@@ -340,24 +334,3 @@ private fun getIconResource(iconName: String): ImageVector {
     return Icons.Default.Event
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CenterAlignedTopAppBar(
-    title: @Composable () -> Unit,
-    modifier: Modifier = Modifier,
-    actions: @Composable RowScope.() -> Unit = {}
-) {
-    TopAppBar(
-        title = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                title()
-            }
-        },
-        actions = actions,
-        modifier = modifier
-    )
-}
