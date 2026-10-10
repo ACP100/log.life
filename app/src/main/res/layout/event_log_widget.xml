@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- NOTE: RemoteViews are inflated by the launcher process, so this layout must
+     NOT reference app-theme attributes (?attr/...) — they fail to resolve there
+     and abort widget placement. Only concrete resources / framework attrs. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="?attr/colorSurface">
+    android:background="@color/white">
 
     <TextView
         android:id="@+id/widget_title"
@@ -13,7 +16,7 @@
         android:layout_height="wrap_content"
         android:text="Currently"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="?attr/colorOnSurface"
+        android:textColor="@color/black"
         android:layout_marginBottom="8dp" />
 
     <TextView
@@ -22,7 +25,7 @@
         android:layout_height="wrap_content"
         android:text="Loading..."
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:textColor="?attr/colorOnSurfaceVariant"
+        android:textColor="@color/teal_700"
         android:layout_marginBottom="16dp" />
 
     <LinearLayout
@@ -38,15 +41,12 @@
             android:text="Refresh"
             style="?android:attr/borderlessButtonStyle" />
 
-        <View
-            android:layout_width="8dp"
-            android:layout_height="0dp" />
-
         <Button
             android:id="@+id/widget_log_event_button"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:layout_marginStart="8dp"
             android:text="Log Event"
             style="?android:attr/borderlessButtonStyle" />
 

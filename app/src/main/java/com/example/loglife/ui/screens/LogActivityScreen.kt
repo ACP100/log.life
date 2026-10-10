@@ -30,13 +30,16 @@ fun LogActivityScreen(
     mainViewModel: MainViewModel = hiltViewModel(),
     navViewModel: NavigationViewModel = hiltViewModel()
 ) {
+    val activeEvents by mainViewModel.activeEvents.collectAsStateWithLifecycle()
     EventSelectionScreen(
         viewModel = mainViewModel,
         onEventSelected = { eventTypeId: Long ->
             mainViewModel.logEvent(eventTypeId)
             navViewModel.navigateTo(HomeDestination)
         },
-        onNavigateBack = { navViewModel.navigateTo(HomeDestination) }
+        onNavigateBack = { navViewModel.navigateTo(HomeDestination) },
+        activeEvents = activeEvents,
+        onStopEvent = { instanceId -> mainViewModel.stopDurationEvent(instanceId) }
     )
 }
 

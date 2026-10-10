@@ -1,5 +1,6 @@
 package com.example.loglife.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -43,9 +44,17 @@ import androidx.compose.ui.tooling.preview.Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
-    viewModel: MainViewModel = hiltViewModel()
+    viewModel: MainViewModel = hiltViewModel(),
+    onNavigateBack: () -> Unit = {}
 ) {
     var selectedDate by remember { mutableStateOf<Long?>(null) }
+
+    // System back clears the selected date first. When no date is selected
+    // this handler is disabled, so MainScreen's handler pops the nav stack.
+    // (Innermost enabled BackHandler wins.)
+    BackHandler(enabled = selectedDate != null) {
+        selectedDate = null
+    }
 
     Scaffold(
         topBar = {
@@ -66,8 +75,8 @@ fun CalendarScreen(
                     selectedDate = date
                 },
                 onNavigateBack = {
-                    // Navigate back to previous screen (e.g., clear selected date)
-                    selectedDate = null
+                    // Top-bar back: clear the date first, otherwise leave the screen
+                    if (selectedDate != null) selectedDate = null else onNavigateBack()
                 },
                 modifier = Modifier.fillMaxWidth()
             )

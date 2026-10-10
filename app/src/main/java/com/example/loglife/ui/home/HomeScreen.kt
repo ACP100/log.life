@@ -55,7 +55,14 @@ fun HomeScreen(
                 title = {
                     Text("Life Log")
                 },
-                actions = { }
+                actions = {
+                    IconButton(onClick = onNavigateToSettings) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings"
+                        )
+                    }
+                }
             )
         },
         content = { innerPadding ->
@@ -64,12 +71,12 @@ fun HomeScreen(
                 CenteredLoadingIndicator()
             } else {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    // Event display (information only, no action buttons)
+                    // Event display with stop action for active events
                     HomeScreenContent(
                         activeEvents = activeEvents,
                         recentEvent = recentEvent,
                         onLogEventClick = { /* Not used in UI - only for callbacks */ },
-                        onStopEventClick = { /* Not used in UI - only for callbacks */ },
+                        onStopEventClick = { instanceId -> viewModel.stopDurationEvent(instanceId) },
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(innerPadding)
@@ -104,11 +111,11 @@ fun HomeScreenContent(
         modifier = modifier,
         verticalArrangement = Arrangement.Top
     ) {
-        // Active Events Section (info only)
+        // Active Events Section
         if (activeEvents.isNotEmpty()) {
             ActiveEventsSection(
                 activeEvents = activeEvents,
-                onStopEventClick = { /* Not used in UI - only for callbacks */ }
+                onStopEventClick = onStopEventClick
             )
             Spacer(modifier = Modifier.height(24.dp))
         }
@@ -152,7 +159,7 @@ fun ActiveEventsSection(
             items(activeEvents) { event ->
                 ActiveEventItem(
                     event = event,
-                    onStopClick = { /* Not used in UI - only for callbacks */ }
+                    onStopClick = { onStopEventClick(event.eventInstance.id) }
                 )
             }
         }
@@ -162,10 +169,12 @@ fun ActiveEventsSection(
 @Composable
 fun ActiveEventItem(
     event: EventInstanceWithType,
-    onStopClick: () -> Unit // Kept for callback compatibility but not used in UI
+    onStopClick: () -> Unit
 ) {
     val eventType = event.eventType
     val eventInstance = event.eventInstance
+    val isActiveDuration = eventType.eventMode == com.example.loglife.data.model.EventMode.DURATION &&
+            eventInstance.endTime == null
 
     Row(
         modifier = Modifier
@@ -174,7 +183,8 @@ fun ActiveEventItem(
             .background(
                 color = MaterialTheme.colorScheme.surfaceVariant,
                 shape = MaterialTheme.shapes.medium
-            ),
+            )
+            .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Icon
@@ -195,7 +205,7 @@ fun ActiveEventItem(
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            if (eventType.eventMode == com.example.loglife.data.model.EventMode.DURATION) {
+            if (eventType.eventMode == EventMode.DURATION) {
                 if (eventInstance.endTime == null) {
                     // Active duration
                     Text(
@@ -222,6 +232,16 @@ fun ActiveEventItem(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+        }
+        // Stop button inside the event info row for active duration events
+        if (isActiveDuration) {
+            Spacer(modifier = Modifier.width(12.dp))
+            Button(
+                onClick = onStopClick,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text("Stop")
             }
         }
     }
