@@ -421,9 +421,11 @@ class HomeScreenTest {
             )
         })
 
-        // For now, we'll just verify the screen renders without error
-        // In a more detailed test, we'd interact with the expandable menu
-        assertThat(true).isTrue()
+        // Click the Settings action in the top bar
+        composeTestRule.onNodeWithContentDescription("Settings").performClick()
+
+        // Assert
+        assertThat(navigateToSettingsCalled).isTrue()
     }
 
     @Test

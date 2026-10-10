@@ -185,7 +185,7 @@ class EventLogWidgetProvider : AppWidgetProvider() {
                 val activeEvents = eventInstanceRepository.getActiveDurationEvents()
 
                 // Update UI on main thread
-                context.mainExecutor.execute {
+                android.os.Handler(android.os.Looper.getMainLooper()).post {
                     if (activeEvents.isEmpty()) {
                         views.setTextViewText(R.id.widget_content, "No active events")
                     } else {
@@ -205,7 +205,7 @@ class EventLogWidgetProvider : AppWidgetProvider() {
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                context.mainExecutor.execute {
+                android.os.Handler(android.os.Looper.getMainLooper()).post {
                     views.setTextViewText(R.id.widget_content, "Error loading events")
                     val appWidgetManager = AppWidgetManager.getInstance(context)
                     appWidgetManager.updateAppWidget(appWidgetId, views)
@@ -280,7 +280,7 @@ class EventLogWidgetProvider : AppWidgetProvider() {
                 val activeEvents = eventInstanceRepository.getActiveDurationEvents()
 
                 // Update UI on main thread
-                context.mainExecutor.execute {
+                android.os.Handler(android.os.Looper.getMainLooper()).post {
                     if (activeEvents.isEmpty()) {
                         views.setTextViewText(R.id.widget_content, "No active events")
                     } else {
@@ -300,7 +300,7 @@ class EventLogWidgetProvider : AppWidgetProvider() {
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                context.mainExecutor.execute {
+                android.os.Handler(android.os.Looper.getMainLooper()).post {
                     views.setTextViewText(R.id.widget_content, "Error loading events")
                     val appWidgetManager = AppWidgetManager.getInstance(context)
                     appWidgetManager.updateAppWidget(appWidgetId, views)
@@ -357,7 +357,7 @@ class EventLogWidgetProvider : AppWidgetProvider() {
                 }
 
                 // Refresh the widget to show updated state
-                context.mainExecutor.execute {
+                android.os.Handler(android.os.Looper.getMainLooper()).post {
                     val appWidgetManager = AppWidgetManager.getInstance(context)
                     updateAppWidget(context, appWidgetManager, appWidgetId)
                 }

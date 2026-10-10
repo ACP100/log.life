@@ -108,7 +108,7 @@ fun <T> SmartSidebar(
     selectedContentColor: Color = MaterialTheme.colorScheme.primary,
     content: @Composable () -> Unit = {}
 ) {
-    require(destinations.size in 3..4) { "SmartSidebar requires 3 or 4 destinations" }
+    require(destinations.size in 3..5) { "SmartSidebar requires 3 to 5 destinations" }
 
     val density = LocalDensity.current
     val panelWidthPx = with(density) { panelWidth.toPx() }

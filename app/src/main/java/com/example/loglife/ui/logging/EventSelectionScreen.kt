@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,7 +26,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.loglife.R
+import com.example.loglife.data.dao.EventInstanceWithType
 import com.example.loglife.data.model.EventType
+import com.example.loglife.util.DateTimeUtils
 import com.example.loglife.viewmodel.MainViewModel
 import com.example.loglife.ui.theme.LoglifeTheme
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,10 +46,17 @@ fun EventSelectionScreen(
     viewModel: MainViewModel = hiltViewModel(),
     onEventSelected: (Long) -> Unit, // eventTypeId
     onNavigateBack: () -> Unit,
+    activeEvents: List<EventInstanceWithType> = emptyList(),
+    onStopEvent: (Long) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val eventTypes by viewModel.eventTypes.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val activeByTypeId = remember(activeEvents) {
+        activeEvents
+            .filter { it.eventInstance.endTime == null }
+            .associateBy { it.eventInstance.eventTypeId }
+    }
 
     Scaffold(
         topBar = {
@@ -81,6 +91,8 @@ fun EventSelectionScreen(
                         onEventSelected(eventType.id)
                         onNavigateBack() // Return to home screen
                     },
+                    activeByTypeId = activeByTypeId,
+                    onStopEvent = onStopEvent,
                     modifier = contentModifier
                 )
             }
@@ -92,6 +104,8 @@ fun EventSelectionScreen(
 fun LogEventList(
     eventTypes: List<EventType>,
     onEventClick: (EventType) -> Unit,
+    activeByTypeId: Map<Long, EventInstanceWithType> = emptyMap(),
+    onStopEvent: (Long) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     // Group event types by category for better organization
@@ -119,9 +133,12 @@ fun LogEventList(
             // Events in this category
             items(eventsInCategory.size) { eventIndex ->
                 val eventType = eventsInCategory[eventIndex]
+                val activeInstance = activeByTypeId[eventType.id]
                 EventTypeItem(
                     eventType = eventType,
                     onClick = { onEventClick(eventType) },
+                    activeInstance = activeInstance,
+                    onStopClick = { instanceId -> onStopEvent(instanceId) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
@@ -173,9 +190,13 @@ fun CategoryHeader(
 fun EventTypeItem(
     eventType: EventType,
     onClick: () -> Unit,
+    activeInstance: EventInstanceWithType? = null,
+    onStopClick: (Long) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val isWidgetVisible = eventType.showInWidget
+    val isActiveDuration = eventType.eventMode == EventMode.DURATION &&
+            activeInstance != null && activeInstance.eventInstance.endTime == null
 
     Card(
         modifier = modifier
@@ -188,7 +209,8 @@ fun EventTypeItem(
         Row(
             modifier = Modifier
                 .padding(16.dp)
-                .fillMaxWidth()
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             // Icon
             Icon(
@@ -208,12 +230,32 @@ fun EventTypeItem(
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                if (eventType.category != null) {
+                if (isActiveDuration) {
+                    Text(
+                        text = "${DateTimeUtils.formatDuration(
+                            activeInstance!!.eventInstance.startTime,
+                            DateTimeUtils.nowUtc()
+                        )} ● Active",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                } else if (eventType.category != null) {
                     Text(
                         text = eventType.category,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+            }
+
+            // Stop button inside the event info for a running duration event
+            if (isActiveDuration) {
+                Spacer(modifier = Modifier.width(12.dp))
+                Button(
+                    onClick = { onStopClick(activeInstance!!.eventInstance.id) },
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Text("Stop")
                 }
             }
 
