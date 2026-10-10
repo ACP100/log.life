@@ -1,5 +1,6 @@
 package com.example.loglife.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
@@ -24,6 +25,7 @@ import com.example.loglife.ui.theme.LoglifeTheme
 import com.example.loglife.util.DateTimeUtils
 import com.example.loglife.navigation.CalendarDestination
 import com.example.loglife.navigation.LogActivityDestination
+import com.example.loglife.navigation.SettingsDestination
 import com.example.loglife.viewmodel.NavigationViewModel
 import com.example.loglife.navigation.StatsDestination
 
@@ -43,6 +45,13 @@ fun MainScreen(
     // Collect navigation items and current destination from ViewModel
     val navigationItems = navViewModel.navigationItems
     val currentDestination by navViewModel.currentDestination.collectAsState()
+    val backStack by navViewModel.backStack.collectAsState()
+
+    // System back pops the nav stack; at the root (Home) it falls through
+    // and the system handles it (exits the app).
+    BackHandler(enabled = backStack.size > 1) {
+        navViewModel.navigateBack()
+    }
 
     MainScreenShell(
         navigationItems = navigationItems,
@@ -57,12 +66,15 @@ fun MainScreen(
                     onNavigateToCalendar = { navViewModel.navigateTo(CalendarDestination) },
                     onNavigateToReport = { navViewModel.navigateTo(StatsDestination) },
                     onNavigateToEventManagement = { /* TODO */ },
-                    onNavigateToSettings = { /* TODO */ }
+                    onNavigateToSettings = { navViewModel.navigateTo(SettingsDestination) }
                 )
-                is LogActivityDestination -> LogActivityScreen()
+                is LogActivityDestination -> LogActivityScreen(navViewModel = navViewModel)
                 is StatsDestination -> StatsScreen()
-                is CalendarDestination -> CalendarScreen()
-                else -> LogActivityScreen()
+                is CalendarDestination -> CalendarScreen(
+                    onNavigateBack = { navViewModel.navigateBack() }
+                )
+                is SettingsDestination -> SettingsScreen(navViewModel = navViewModel)
+                else -> LogActivityScreen(navViewModel = navViewModel)
             }
         }
     )
