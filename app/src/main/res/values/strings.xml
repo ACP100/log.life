@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">log.life</string>
+    <string name="widget_label">Life Log</string>
+    <string name="widget_description">See active events and quick-log new ones from your home screen.</string>
 </resources>

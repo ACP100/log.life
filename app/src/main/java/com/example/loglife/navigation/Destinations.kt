@@ -19,3 +19,8 @@ object StatsDestination : Destination
  * Destination for the Calendar screen.
  */
 object CalendarDestination : Destination
+
+/**
+ * Destination for the Settings screen.
+ */
+object SettingsDestination : Destination
