@@ -68,3 +68,14 @@ This implementation adheres to the detailed product specifications provided, inc
 ## License
 
 Personal use - derived from product specifications for a life logging app.
+
+## Accessing Builds from GitHub Actions
+
+Every push to any branch triggers an automatic build via GitHub Actions. To access the latest build:
+
+1. Go to the repository's **Actions** tab
+2. Select the desired workflow run (look for the "Android Build" workflow)
+3. From the workflow run summary, download the artifact named `app-debug-[branch-name]-[commit-sha]`
+4. Artifacts are retained for 30 days before automatic expiration
+
+Note: These are debug builds intended for testing purposes. For release builds, you would need to adjust the build configuration accordingly.
