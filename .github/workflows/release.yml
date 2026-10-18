@@ -26,6 +26,13 @@ jobs:
     - name: Make Gradlew executable
       run: chmod +x gradlew
 
+    - name: Set version from tag
+      run: |
+        VERSION=${GITHUB_REF_NAME#v}
+        sed -i "s/versionCode = .*/versionCode = ${{ github.run_number }}/" app/build.gradle.kts
+        sed -i "s/versionName = .*/versionName = \"$VERSION\"/" app/build.gradle.kts
+        grep -n "versionCode\|versionName" app/build.gradle.kts
+
     - name: Build APK
       run: ./gradlew assembleDebug --no-daemon
 
