@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="wl_card">#FF1E2028</color>
+    <color name="wl_ink">#FFF2F2EE</color>
+    <color name="wl_on_ink">#FF18191E</color>
+    <color name="wl_muted">#FF9A9DA6</color>
+    <color name="wl_btn">#FF2A2D36</color>
+    <color name="wl_chip">#1FFFFFFF</color>
+    <color name="wl_chip_on_ink">#14000000</color>
+    <color name="wl_dash">#FF3A3D46</color>
+    <color name="wl_label">#FFFFFFFF</color>
+</resources>

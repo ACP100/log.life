@@ -4,6 +4,7 @@ import android.content.Context
 import com.example.loglife.data.LogLifeDatabase
 import com.example.loglife.data.dao.EventInstanceDao
 import com.example.loglife.data.dao.EventTypeDao
+import com.example.loglife.data.settings.AppSettingsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,6 +21,11 @@ object DatabaseModule {
     fun provideDatabase(@ApplicationContext context: Context): LogLifeDatabase {
         return LogLifeDatabase.getInstance(context)
     }
+
+    @Provides
+    @Singleton
+    fun provideAppSettings(@ApplicationContext context: Context): AppSettingsRepository =
+        AppSettingsRepository.get(context)
 
     @Provides
     @Singleton

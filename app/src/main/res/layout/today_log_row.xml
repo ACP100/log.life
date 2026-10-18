@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Finished log: start time, dot (filled = session, ring = moment), name,
+     duration for sessions. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="28dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+
+    <TextView
+        android:id="@+id/tl_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="monospace"
+        android:maxLines="1"
+        android:textColor="@color/wl_muted"
+        android:textSize="12sp" />
+
+    <ImageView
+        android:id="@+id/tl_dot"
+        android:layout_width="9dp"
+        android:layout_height="9dp"
+        android:layout_marginStart="10dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/wl_dot_ring" />
+
+    <TextView
+        android:id="@+id/tl_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif-medium"
+        android:maxLines="1"
+        android:textColor="@color/wl_ink"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tl_duration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:fontFamily="monospace"
+        android:maxLines="1"
+        android:textColor="@color/wl_ink"
+        android:textSize="12sp" />
+</LinearLayout>

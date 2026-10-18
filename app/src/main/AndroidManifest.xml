@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:name=".LogLifeApplication"
         android:allowBackup="true"
@@ -24,32 +26,61 @@
             </intent-filter>
         </activity>
 
-        <!-- Quick-log entry point (e.g. for widgets): not exported, no intent-filter -->
+        <!-- "Ask first" prompt opened by widget taps. Own task so it closes
+             back to the home screen, not into the app. -->
         <activity
-            android:name=".LogEventActivity"
+            android:name=".ui.widgets.ConfirmTapActivity"
             android:exported="false"
-            android:theme="@style/Theme.Loglife" />
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@style/Theme.Loglife.Prompt" />
 
-        <!-- Widget Provider -->
+        <!-- Stop / Still going on the session notifications -->
+        <receiver
+            android:name=".notifications.SessionActionReceiver"
+            android:exported="false" />
+
+        <!-- Quick log deck widget -->
         <receiver
             android:name=".ui.widgets.EventLogWidgetProvider"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.example.loglife.action.WIDGET_ITEM_CLICK" />
+                <action android:name="com.example.loglife.action.REFRESH_ALL_WIDGETS" />
+                <action android:name="com.example.loglife.action.WIDGET_FLIP_NEXT" />
+                <action android:name="com.example.loglife.action.WIDGET_FLIP_PREV" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/event_log_widget_info" />
         </receiver>
 
-        <!-- Widget Configuration Activity -->
-        <activity
-            android:name=".ui.widgets.EventLogWidgetConfigureActivity"
-            android:exported="true">
+        <!-- Quick buttons widget -->
+        <receiver
+            android:name=".ui.widgets.QuickButtonsWidgetProvider"
+            android:exported="false">
             <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.example.loglife.action.WIDGET_ITEM_CLICK" />
             </intent-filter>
-        </activity>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/quick_buttons_widget_info" />
+        </receiver>
+
+        <!-- Today widget -->
+        <receiver
+            android:name=".ui.widgets.TodayStatsWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/today_stats_widget_info" />
+        </receiver>
     </application>
 
 </manifest>

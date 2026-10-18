@@ -18,6 +18,9 @@ data class EventType(
     val category: String? = null,
     val showInWidget: Boolean = true,
     val widgetOrder: Int = 0,
+    val color: String? = null,
+    val pinned: Boolean = false,
+    val archived: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )

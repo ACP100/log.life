@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget palette (light). Night variants in values-night. Mirrored in
+     WidgetStyle.kt for per-event tints computed in code. -->
+<resources>
+    <color name="wl_card">#FFF3F3EF</color>
+    <color name="wl_ink">#FF18191E</color>
+    <color name="wl_on_ink">#FFF3F3EF</color>
+    <color name="wl_muted">#FF6B6E76</color>
+    <color name="wl_btn">#FFE4E4DF</color>
+    <color name="wl_chip">#14000000</color>
+    <color name="wl_chip_on_ink">#26FFFFFF</color>
+    <color name="wl_dash">#FFC9C9C3</color>
+    <color name="wl_label">#FFFFFFFF</color>
+</resources>

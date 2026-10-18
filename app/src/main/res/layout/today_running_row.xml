@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Running session pill: ink background (tinted in code), live timer. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="34dp"
+    android:layout_marginTop="6dp">
+
+    <ImageView
+        android:id="@+id/tr_bg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
+        android:src="@drawable/wl_tile_bg" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
+
+        <ImageView
+            android:id="@+id/tr_dot"
+            android:layout_width="9dp"
+            android:layout_height="9dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/wl_dot_filled" />
+
+        <TextView
+            android:id="@+id/tr_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
+            android:maxLines="1"
+            android:textColor="@color/wl_on_ink"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <Chronometer
+            android:id="@+id/tr_timer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:fontFamily="monospace"
+            android:maxLines="1"
+            android:textColor="@color/wl_on_ink"
+            android:textSize="14sp" />
+    </LinearLayout>
+</FrameLayout>

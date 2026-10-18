@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Quick log deck. Resizes down to one row (4x1) and two columns (2x2);
+     the provider picks the matching layout. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:label="@string/widget_label"
     android:description="@string/widget_description"
     android:minWidth="110dp"
-    android:minHeight="110dp"
-    android:targetCellWidth="3"
+    android:minHeight="40dp"
+    android:minResizeWidth="110dp"
+    android:minResizeHeight="40dp"
+    android:targetCellWidth="4"
     android:targetCellHeight="2"
     android:updatePeriodMillis="0"
-    android:initialLayout="@layout/event_log_widget"
+    android:initialLayout="@layout/deck_widget"
+    android:previewLayout="@layout/deck_widget"
     android:resizeMode="horizontal|vertical"
-    android:widgetCategory="home_screen"
-    android:configure="com.example.loglife.ui.widgets.EventLogWidgetConfigureActivity" />
+    android:widgetCategory="home_screen" />

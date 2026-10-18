@@ -1,397 +1,377 @@
 package com.example.loglife.ui.widgets
 
-import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
+import android.util.Log
+import android.view.View
 import android.widget.RemoteViews
-import androidx.annotation.RequiresApi
 import com.example.loglife.R
-import com.example.loglife.data.model.EventMode
-import com.example.loglife.data.model.EventType
-import com.example.loglife.data.model.EventInstance
-import com.example.loglife.data.dao.EventInstanceWithType
-import com.example.loglife.data.repository.EventInstanceRepository
-import com.example.loglife.data.repository.EventTypeRepository
-import com.example.loglife.LogLifeApplication
-import com.example.loglife.MainActivity
-import com.example.loglife.LogEventActivity
-import com.example.loglife.util.DateTimeUtils
+import com.example.loglife.data.settings.AppSettingsRepository
+import com.example.loglife.ui.widgets.WidgetStyle.bindCard
+import com.example.loglife.ui.widgets.WidgetStyle.iconButton
+import com.example.loglife.ui.widgets.WidgetStyle.setDayNight
+import com.example.loglife.ui.widgets.WidgetStyle.text
+import com.example.loglife.util.formatClock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 /**
- * App Widget for the Life Logging app.
- * Supports three modes:
- * 1. Current Log - shows currently active duration events
- * 2. Add Log - shows quick buttons for logging events
- * 3. Both - combines Current Log (first slide) and Add Log (subsequent slides)
+ * Quick log deck: one tile at a time, stepped with ‹ ›.
+ *
+ * Running sessions come first, then quick-log favourites in the order set on
+ * the Widget screen (see [WidgetData.buildDeck]). Taps go through
+ * [WidgetActions]: running tile stops, idle session starts (and the deck
+ * jumps to it), moment logs at this minute; Settings can add an undo
+ * window or a confirm prompt.
+ *
+ * Deliberately static (no ListView/StackView): several launchers don't
+ * implement collection gestures, a plain tile renders the same everywhere.
+ * Running timers are Chronometers, so they count up with no refreshes.
+ *
+ * Three layouts picked from the placed size: regular (4x2), narrow (2x2)
+ * and short (4x1, under ~150dp tall). They share view ids.
  */
 class EventLogWidgetProvider : AppWidgetProvider() {
 
     companion object {
-        const val WIDGET_MODE_CURRENT_LOG = "current_log"
-        const val WIDGET_MODE_ADD_LOG = "add_log"
-        const val WIDGET_MODE_BOTH = "both"
-
-        // Action strings for widget interactions
-        private const val ACTION_TOGGLE_EVENT = "com.example.loglife.action.TOGGLE_EVENT"
-        private const val ACTION_OPEN_APP = "com.example.loglife.action.OPEN_APP"
-        private const val ACTION_OPEN_LOG_EVENT = "com.example.loglife.action.OPEN_LOG_EVENT"
-        private const val ACTION_REFRESH_WIDGET = "com.example.loglife.action.REFRESH_WIDGET"
-        private const val ACTION_WIDGET_NEXT = "com.example.loglife.action.WIDGET_NEXT"
-
-        // Extra keys
-        private const val EXTRA_WIDGET_MODE = "widget_mode"
-        private const val EXTRA_EVENT_TYPE_ID = "event_type_id"
         private const val EXTRA_WIDGET_ID = "widget_id"
-        private const val EXTRA_CURRENT_INDEX = "current_index"
+
+        private const val PREFS_STATE_PREFIX = "widget_state_"
+        private const val KEY_CURRENT_INDEX = "current_index"
+        private const val KEY_ACTIVE_IDS = "active_ids"
+        private const val KEY_TYPE_ID = "type_id"
+
+        private const val REQ_TILE_CLICK = 1001
+        private const val REQ_REFRESH = 1002
+        private const val REQ_EMPTY = 1003
+        private const val REQ_NEXT = 1004
+        private const val REQ_PREV = 1005
+
+        /** Below this height (dp) the deck uses the one-row layout. */
+        private const val SHORT_MAX_HEIGHT_DP = 150
+
+        /** Below this width (dp) the deck uses the 2x2 layout. */
+        private const val NARROW_MAX_WIDTH_DP = 220
+
+        /** Width one indicator dot takes in the strip (dp). */
+        private const val DOT_SLOT_DP = 15
+
+        private const val TAG = "EventLogWidget"
     }
 
-    @RequiresApi(Build.VERSION_CODES.P)
+    private enum class Size { REGULAR, NARROW, SHORT }
+
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        // Perform this loop procedure for each App Widget that belongs to this provider
-        appWidgetIds.forEach { appWidgetId ->
-            updateAppWidget(context, appWidgetManager, appWidgetId)
-        }
+        appWidgetIds.forEach { renderWidget(context, appWidgetManager, it) }
         super.onUpdate(context, appWidgetManager, appWidgetIds)
     }
 
-    override fun onEnabled(context: Context) {
-        // Enter relevant functionality for when the first widget is created
-        super.onEnabled(context)
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: Bundle
+    ) {
+        // Resized: re-pick the layout.
+        renderWidget(context, appWidgetManager, appWidgetId)
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
     }
 
-    override fun onDisabled(context: Context) {
-        // Enter relevant functionality for when the last widget is disabled
-        super.onDisabled(context)
+    override fun onDeleted(context: Context, appWidgetIds: IntArray) {
+        appWidgetIds.forEach { id ->
+            context.getSharedPreferences(PREFS_STATE_PREFIX + id, Context.MODE_PRIVATE)
+                .edit().clear().apply()
+            // Mode prefs written by the old configure screen.
+            context.getSharedPreferences("widget_config_$id", Context.MODE_PRIVATE)
+                .edit().clear().apply()
+        }
+        super.onDeleted(context, appWidgetIds)
     }
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
-        val action = intent.action
+        when (intent.action) {
+            WidgetSync.ACTION_ITEM_CLICK -> WidgetActions.handleTap(context, intent, goAsync())
+            WidgetActions.ACTION_UNDO -> WidgetActions.handleUndo(context, goAsync())
+            WidgetSync.ACTION_REFRESH_ALL -> WidgetSync.refreshAll(context)
+            WidgetSync.ACTION_FLIP_NEXT -> stepTile(context, intent, +1)
+            WidgetSync.ACTION_FLIP_PREV -> stepTile(context, intent, -1)
+        }
+    }
 
-        when (action) {
-            ACTION_TOGGLE_EVENT -> {
-                val widgetId = intent.getIntExtra(EXTRA_WIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
-                val eventTypeId = intent.getLongExtra(EXTRA_EVENT_TYPE_ID, -1L)
-                if (widgetId != AppWidgetManager.INVALID_APPWIDGET_ID && eventTypeId != -1L) {
-                    toggleEventInWidget(context, widgetId, eventTypeId)
-                }
+    // --- Rendering ---
+
+    private fun renderWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val views = try {
+                buildViews(context, appWidgetManager, appWidgetId)
+            } catch (e: Exception) {
+                Log.w(TAG, "render failed", e)
+                RemoteViews(context.packageName, R.layout.deck_widget)
             }
-            ACTION_OPEN_APP -> {
-                val widgetId = intent.getIntExtra(EXTRA_WIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
-                openAppFromWidget(context, widgetId)
-            }
-            ACTION_OPEN_LOG_EVENT -> {
-                val widgetId = intent.getIntExtra(EXTRA_WIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
-                openLogEventScreenFromWidget(context, widgetId)
-            }
-            ACTION_REFRESH_WIDGET -> {
-                val widgetId = intent.getIntExtra(EXTRA_WIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
-                if (widgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
-                    val appWidgetManager = AppWidgetManager.getInstance(context)
-                    updateAppWidget(context, appWidgetManager, widgetId)
-                }
-            }
-            ACTION_WIDGET_NEXT -> {
-                val widgetId = intent.getIntExtra(EXTRA_WIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
-                if (widgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
-                    val appWidgetManager = AppWidgetManager.getInstance(context)
-                    // For now, just refresh - in a real implementation we'd flip views
-                    updateAppWidget(context, appWidgetManager, widgetId)
-                }
+            try {
+                appWidgetManager.updateAppWidget(appWidgetId, views)
+            } catch (e: Exception) {
+                Log.w(TAG, "update failed", e)
             }
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.P)
-    @SuppressLint("RemoteViewLayout")
-    private fun updateAppWidget(
+    private suspend fun buildViews(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int
-    ) {
-        // Get widget configuration (mode, selected events, etc.)
-        val widgetMode = getWidgetMode(context, appWidgetId)
-        val widgetViews = RemoteViews(context.packageName, R.layout.event_log_widget)
-
-        when (widgetMode) {
-            WIDGET_MODE_CURRENT_LOG -> {
-                setupCurrentLogWidget(context, widgetViews, appWidgetId)
+    ): RemoteViews {
+        val (size, widthDp) = sizeOf(appWidgetManager, appWidgetId)
+        val views = RemoteViews(
+            context.packageName,
+            when (size) {
+                Size.REGULAR -> R.layout.deck_widget
+                Size.NARROW -> R.layout.deck_widget_narrow
+                Size.SHORT -> R.layout.deck_widget_short
             }
-            WIDGET_MODE_ADD_LOG -> {
-                setupAddLogWidget(context, widgetViews, appWidgetId)
-            }
-            WIDGET_MODE_BOTH -> {
-                setupBothWidget(context, widgetViews, appWidgetId)
-            }
-        }
-
-        // Add click handler to open the main app
-        val appIntent = Intent(context, MainActivity::class.java).apply {
-            putExtra(EXTRA_WIDGET_ID, appWidgetId)
-            setAction(ACTION_OPEN_APP)
-        }
-        val appPendingIntent = PendingIntent.getBroadcast(
-            context,
-            appWidgetId,
-            appIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        widgetViews.setOnClickPendingIntent(R.id.widget_container, appPendingIntent)
+        views.setOnClickPendingIntent(R.id.deck_refresh, broadcast(context, appWidgetId, REQ_REFRESH, WidgetSync.ACTION_REFRESH_ALL))
 
-        // Instruct the widget manager to update the widget
-        appWidgetManager.updateAppWidget(appWidgetId, widgetViews)
+        val palette = WidgetStyle.palette(context)
+        views.bindCard(context, palette)
+        views.text(context, R.id.deck_eyebrow, palette.muted)
+        views.text(context, R.id.deck_counter, palette.muted)
+        views.text(context, R.id.deck_empty_title, palette.ink)
+        views.text(context, R.id.deck_empty_hint, palette.muted)
+        listOf(R.id.deck_prev, R.id.deck_next, R.id.deck_refresh).forEach { views.iconButton(context, it, palette) }
+
+        val settings = AppSettingsRepository.get(context).current.widget
+        val tiles = WidgetData.loadDeck(context.applicationContext, settings.deckRunningFirst)
+        if (tiles.isEmpty()) {
+            views.setViewVisibility(R.id.deck_tile, View.GONE)
+            views.setViewVisibility(R.id.deck_empty, View.VISIBLE)
+            views.setViewVisibility(R.id.deck_nav, View.GONE)
+            views.setViewVisibility(R.id.deck_prev, View.GONE)
+            views.setViewVisibility(R.id.deck_next, View.GONE)
+            views.setTextViewText(R.id.deck_eyebrow, "QUICK LOG")
+            views.setViewVisibility(R.id.deck_counter, View.GONE)
+            views.setOnClickPendingIntent(
+                R.id.deck_empty,
+                WidgetActions.openWidgetSettings(context, REQ_EMPTY + appWidgetId)
+            )
+            return views
+        }
+
+        val prefs = context.getSharedPreferences(PREFS_STATE_PREFIX + appWidgetId, Context.MODE_PRIVATE)
+        val prevActive = prefs.getString(KEY_ACTIVE_IDS, "").orEmpty()
+            .split(',').mapNotNull { it.toLongOrNull() }.toSet()
+        val index = WidgetData.pickDeckIndex(
+            tiles = tiles,
+            prevIndex = prefs.getInt(KEY_CURRENT_INDEX, 0),
+            prevTypeId = prefs.getLong(KEY_TYPE_ID, -1L),
+            prevActive = prevActive,
+        )
+        val tile = tiles[index]
+        prefs.edit()
+            .putInt(KEY_CURRENT_INDEX, index)
+            .putLong(KEY_TYPE_ID, tile.eventTypeId)
+            .putString(KEY_ACTIVE_IDS, tiles.filter { it.isRunning }.joinToString(",") { it.instanceId.toString() })
+            .apply()
+
+        views.setViewVisibility(R.id.deck_tile, View.VISIBLE)
+        views.setViewVisibility(R.id.deck_empty, View.GONE)
+        views.setViewVisibility(R.id.deck_nav, View.VISIBLE)
+        val canStep = tiles.size > 1
+        views.setViewVisibility(R.id.deck_prev, if (canStep) View.VISIBLE else View.INVISIBLE)
+        views.setViewVisibility(R.id.deck_next, if (canStep) View.VISIBLE else View.INVISIBLE)
+        val undo = PendingUndo.current(context)?.takeIf { it.eventTypeId == tile.eventTypeId }
+        views.setTextViewText(R.id.deck_eyebrow, if (tile.isRunning) "RUNNING" else "QUICK LOG")
+        views.setTextViewText(R.id.deck_counter, "${index + 1} / ${tiles.size}")
+        // The short tile has room for either the counter or the timer.
+        views.setViewVisibility(
+            R.id.deck_counter,
+            if (size == Size.SHORT && (tile.isRunning || undo != null)) View.GONE else View.VISIBLE
+        )
+
+        if (undo != null) bindUndo(context, views, tile, undo, size) else bindTile(context, views, tile, size, palette)
+        if (size == Size.REGULAR) bindDots(context, views, tiles, index, widthDp, palette)
+
+        views.setOnClickPendingIntent(
+            R.id.deck_tile,
+            WidgetActions.tapIntent(context, EventLogWidgetProvider::class.java, REQ_TILE_CLICK + appWidgetId, tile)
+        )
+        views.setOnClickPendingIntent(R.id.deck_next, broadcast(context, appWidgetId, REQ_NEXT, WidgetSync.ACTION_FLIP_NEXT))
+        views.setOnClickPendingIntent(R.id.deck_prev, broadcast(context, appWidgetId, REQ_PREV, WidgetSync.ACTION_FLIP_PREV))
+        return views
     }
 
-    @RequiresApi(Build.VERSION_CODES.P)
-    private fun setupCurrentLogWidget(
+    /** The tapped tile during the undo window: event colour, "Coffee logged", countdown. */
+    private fun bindUndo(context: Context, views: RemoteViews, tile: WidgetData.Tile, undo: PendingUndo, size: Size) {
+        val white = 0xFFFFFFFF.toInt()
+        views.setInt(R.id.deck_tile_bg, "setColorFilter", tile.color)
+        views.setImageViewResource(R.id.deck_tile_dot, R.drawable.ic_check_small)
+        views.setInt(R.id.deck_tile_dot, "setColorFilter", white)
+        val verb = when (undo.kind) {
+            WidgetActions.TapKind.LOGGED -> "logged"
+            WidgetActions.TapKind.STARTED -> "started"
+            WidgetActions.TapKind.STOPPED -> "stopped"
+        }
+        views.setTextViewText(R.id.deck_tile_name, "${tile.name} $verb")
+        views.setTextColor(R.id.deck_tile_name, white)
+        views.setViewVisibility(R.id.deck_tile_chip, View.GONE)
+
+        views.setChronometer(R.id.deck_tile_timer, SystemClock.elapsedRealtime() + undo.remainingMillis, "Undo in %s", true)
+        views.setChronometerCountDown(R.id.deck_tile_timer, true)
+        views.setTextColor(R.id.deck_tile_timer, white)
+        views.setViewVisibility(R.id.deck_tile_timer, View.VISIBLE)
+
+        views.setTextViewText(R.id.deck_tile_hint, "Tap to undo")
+        views.setTextColor(R.id.deck_tile_hint, white)
+        views.setViewVisibility(R.id.deck_tile_hint_icon, View.VISIBLE)
+        views.setImageViewResource(R.id.deck_tile_hint_icon, R.drawable.ic_undo)
+        views.setInt(R.id.deck_tile_hint_icon, "setColorFilter", white)
+
+        views.setViewVisibility(R.id.deck_tile_last, View.VISIBLE)
+        views.setTextViewText(R.id.deck_tile_last, if (size == Size.SHORT) "Tap to undo" else formatClock(undo.at))
+        views.setTextColor(R.id.deck_tile_last, withAlpha(white, 0xCC))
+
+        views.setContentDescription(R.id.deck_tile, "${tile.name} $verb. Tap to undo")
+    }
+
+    private fun bindTile(context: Context, views: RemoteViews, tile: WidgetData.Tile, size: Size, palette: WidgetStyle.Palette) {
+        val running = tile.isRunning
+        val text = if (running) palette.onInk else palette.ink
+        val soft = WidgetStyle.DayNight(withAlpha(text.day, 0xB3), withAlpha(text.night, 0xB3))
+
+        views.setChronometerCountDown(R.id.deck_tile_timer, false)
+        views.setDayNight(context, R.id.deck_tile_bg, "setColorFilter",
+            if (running) palette.ink else palette.tileTint(tile.color))
+
+        views.setImageViewResource(R.id.deck_tile_dot, WidgetStyle.dotRes(tile.isSession || running))
+        views.setInt(R.id.deck_tile_dot, "setColorFilter", tile.color)
+
+        views.setTextViewText(R.id.deck_tile_name, tile.name)
+        views.setDayNight(context, R.id.deck_tile_name, "setTextColor", text)
+
+        if (tile.category != null) {
+            views.setViewVisibility(R.id.deck_tile_chip, View.VISIBLE)
+            views.setTextViewText(R.id.deck_tile_chip, tile.category)
+            views.setInt(R.id.deck_tile_chip, "setBackgroundResource",
+                if (running) R.drawable.wl_chip_on_ink_bg else R.drawable.wl_chip_bg)
+            views.setDayNight(context, R.id.deck_tile_chip, "setTextColor", text)
+        } else {
+            views.setViewVisibility(R.id.deck_tile_chip, View.GONE)
+        }
+
+        val hint = when {
+            running -> "Tap to stop"
+            tile.isSession -> "Tap to start"
+            else -> "Tap to log"
+        }
+        views.setTextViewText(R.id.deck_tile_hint, hint)
+        views.setDayNight(context, R.id.deck_tile_hint, "setTextColor", text)
+        views.setViewVisibility(R.id.deck_tile_hint_icon, if (tile.isSession) View.VISIBLE else View.GONE)
+        views.setImageViewResource(R.id.deck_tile_hint_icon,
+            if (running) R.drawable.ic_stop_small else R.drawable.ic_play_small)
+        views.setDayNight(context, R.id.deck_tile_hint_icon, "setColorFilter", text)
+
+        if (running) {
+            val elapsed = System.currentTimeMillis() - tile.runningSince!!
+            views.setChronometer(R.id.deck_tile_timer, SystemClock.elapsedRealtime() - elapsed, null, true)
+            views.setDayNight(context, R.id.deck_tile_timer, "setTextColor", text)
+            views.setViewVisibility(R.id.deck_tile_timer, View.VISIBLE)
+        } else {
+            views.setChronometer(R.id.deck_tile_timer, SystemClock.elapsedRealtime(), null, false)
+            views.setViewVisibility(R.id.deck_tile_timer, View.GONE)
+        }
+
+        // "last …" line. The short tile reuses it for "Tap to stop".
+        val last = when {
+            !running -> WidgetData.formatLast(tile.lastStart, System.currentTimeMillis())
+            size == Size.SHORT -> hint
+            else -> null
+        }
+        if (last != null) {
+            views.setViewVisibility(R.id.deck_tile_last, View.VISIBLE)
+            views.setTextViewText(R.id.deck_tile_last, last)
+            views.setDayNight(context, R.id.deck_tile_last, "setTextColor", soft)
+        } else {
+            views.setViewVisibility(R.id.deck_tile_last, View.GONE)
+        }
+
+        views.setContentDescription(R.id.deck_tile, "$hint: ${tile.name}")
+    }
+
+    /** One dot per tile; hidden when they would not fit beside ‹ ›. */
+    private fun bindDots(
         context: Context,
         views: RemoteViews,
-        appWidgetId: Int
+        tiles: List<WidgetData.Tile>,
+        index: Int,
+        widthDp: Int,
+        palette: WidgetStyle.Palette
     ) {
-        // Show loading state initially
-        views.setTextViewText(R.id.widget_title, "Currently")
-        views.setTextViewText(R.id.widget_content, "Loading active events...")
-
-        // Set up refresh button
-        val refreshIntent = Intent(context, EventLogWidgetProvider::class.java).apply {
-            putExtra(EXTRA_WIDGET_ID, appWidgetId)
-            setAction(ACTION_REFRESH_WIDGET)
-        }
-        val refreshPendingIntent = PendingIntent.getBroadcast(
-            context,
-            appWidgetId,
-            refreshIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        views.setOnClickPendingIntent(R.id.widget_refresh_button, refreshPendingIntent)
-
-        // Load active events asynchronously
-        CoroutineScope(Dispatchers.Default).launch {
-            try {
-                val app = context.applicationContext as LogLifeApplication
-                val eventInstanceRepository = app.eventInstanceRepository
-                val activeEvents = eventInstanceRepository.getActiveDurationEvents()
-
-                // Update UI on main thread
-                android.os.Handler(android.os.Looper.getMainLooper()).post {
-                    if (activeEvents.isEmpty()) {
-                        views.setTextViewText(R.id.widget_content, "No active events")
-                    } else {
-                        // Show the first active event
-                        val firstEventWithType = activeEvents.first()
-                        val firstEvent = firstEventWithType.eventInstance
-                        val eventType = firstEventWithType.eventType
-                        val eventTypeName = eventType.name
-                        val startTime = firstEvent.startTime
-                        val elapsed = DateTimeUtils.formatDuration(startTime, DateTimeUtils.nowUtc())
-                        views.setTextViewText(R.id.widget_content, "$eventTypeName\nStarted $elapsed ago")
-                    }
-
-                    // Update the widget
-                    val appWidgetManager = AppWidgetManager.getInstance(context)
-                    appWidgetManager.updateAppWidget(appWidgetId, views)
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                android.os.Handler(android.os.Looper.getMainLooper()).post {
-                    views.setTextViewText(R.id.widget_content, "Error loading events")
-                    val appWidgetManager = AppWidgetManager.getInstance(context)
-                    appWidgetManager.updateAppWidget(appWidgetId, views)
-                }
+        views.removeAllViews(R.id.deck_dots)
+        val room = (widthDp - 28 - 2 * 44 - 8) / DOT_SLOT_DP
+        if (tiles.size > room) return
+        tiles.forEachIndexed { i, tile ->
+            val dot = RemoteViews(context.packageName, R.layout.deck_dot)
+            dot.setImageViewResource(R.id.deck_dot, WidgetStyle.dotRes(tile.isSession || tile.isRunning, big = i == index))
+            if (tile.isRunning) {
+                dot.setDayNight(context, R.id.deck_dot, "setColorFilter", palette.ink)
+            } else {
+                dot.setInt(R.id.deck_dot, "setColorFilter", tile.color)
             }
+            views.addView(R.id.deck_dots, dot)
         }
     }
 
-    private fun setupAddLogWidget(
-        context: Context,
-        views: RemoteViews,
-        appWidgetId: Int
-    ) {
-        // Show quick log buttons for selected events
-        views.setTextViewText(R.id.widget_title, "Quick Log")
-        views.setTextViewText(R.id.widget_content, "Select events in configuration")
+    private fun withAlpha(color: Int, alpha: Int) = (alpha shl 24) or (color and 0xFFFFFF)
 
-        // Set up button to open log event screen
-        val logEventIntent = Intent(context, EventLogWidgetProvider::class.java).apply {
-            putExtra(EXTRA_WIDGET_ID, appWidgetId)
-            setAction(ACTION_OPEN_LOG_EVENT)
-        }
-        val logEventPendingIntent = PendingIntent.getBroadcast(
-            context,
-            appWidgetId,
-            logEventIntent,
+    private fun broadcast(context: Context, appWidgetId: Int, req: Int, action: String): PendingIntent =
+        PendingIntent.getBroadcast(
+            context, req + appWidgetId * 10,
+            Intent(context, EventLogWidgetProvider::class.java).apply {
+                this.action = action
+                putExtra(EXTRA_WIDGET_ID, appWidgetId)
+            },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        views.setOnClickPendingIntent(R.id.widget_log_event_button, logEventPendingIntent)
+
+    /** Step the visible tile and re-render; render clamps the index. */
+    private fun stepTile(context: Context, intent: Intent, direction: Int) {
+        val widgetId = intent.getIntExtra(EXTRA_WIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
+        if (widgetId == AppWidgetManager.INVALID_APPWIDGET_ID) return
+        val prefs = context.getSharedPreferences(PREFS_STATE_PREFIX + widgetId, Context.MODE_PRIVATE)
+        prefs.edit()
+            .putInt(KEY_CURRENT_INDEX, prefs.getInt(KEY_CURRENT_INDEX, 0) + direction)
+            .putLong(KEY_TYPE_ID, -1L) // follow the index, not the last shown type
+            .apply()
+        renderWidget(context, AppWidgetManager.getInstance(context), widgetId)
     }
 
-    private fun setupBothWidget(
-        context: Context,
-        views: RemoteViews,
-        appWidgetId: Int
-    ) {
-        // For now, show current log by default
-        views.setTextViewText(R.id.widget_title, "Currently")
-        views.setTextViewText(R.id.widget_content, "Loading active events...")
-
-        // Set up buttons for navigation
-        val nextIntent = Intent(context, EventLogWidgetProvider::class.java).apply {
-            putExtra(EXTRA_WIDGET_ID, appWidgetId)
-            setAction(ACTION_WIDGET_NEXT)
-        }
-        val nextPendingIntent = PendingIntent.getBroadcast(
-            context,
-            appWidgetId,
-            nextIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        views.setOnClickPendingIntent(R.id.widget_refresh_button, nextPendingIntent)
-
-        // Also set up the log event button
-        val logEventIntent = Intent(context, EventLogWidgetProvider::class.java).apply {
-            putExtra(EXTRA_WIDGET_ID, appWidgetId)
-            setAction(ACTION_OPEN_LOG_EVENT)
-        }
-        val logEventPendingIntent = PendingIntent.getBroadcast(
-            context,
-            appWidgetId,
-            logEventIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        views.setOnClickPendingIntent(R.id.widget_log_event_button, logEventPendingIntent)
-
-        // Load active events asynchronously
-        CoroutineScope(Dispatchers.Default).launch {
-            try {
-                val app = context.applicationContext as LogLifeApplication
-                val eventInstanceRepository = app.eventInstanceRepository
-                val activeEvents = eventInstanceRepository.getActiveDurationEvents()
-
-                // Update UI on main thread
-                android.os.Handler(android.os.Looper.getMainLooper()).post {
-                    if (activeEvents.isEmpty()) {
-                        views.setTextViewText(R.id.widget_content, "No active events")
-                    } else {
-                        // Show the first active event
-                        val firstEventWithType = activeEvents.first()
-                        val firstEvent = firstEventWithType.eventInstance
-                        val eventType = firstEventWithType.eventType
-                        val eventTypeName = eventType.name
-                        val startTime = firstEvent.startTime
-                        val elapsed = DateTimeUtils.formatDuration(startTime, DateTimeUtils.nowUtc())
-                        views.setTextViewText(R.id.widget_content, "$eventTypeName\nStarted $elapsed ago")
-                    }
-
-                    // Update the widget
-                    val appWidgetManager = AppWidgetManager.getInstance(context)
-                    appWidgetManager.updateAppWidget(appWidgetId, views)
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                android.os.Handler(android.os.Looper.getMainLooper()).post {
-                    views.setTextViewText(R.id.widget_content, "Error loading events")
-                    val appWidgetManager = AppWidgetManager.getInstance(context)
-                    appWidgetManager.updateAppWidget(appWidgetId, views)
-                }
+    /** Layout bucket plus the width in dp (portrait). */
+    private fun sizeOf(appWidgetManager: AppWidgetManager, appWidgetId: Int): Pair<Size, Int> {
+        return try {
+            val opts = appWidgetManager.getAppWidgetOptions(appWidgetId)
+            val width = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
+            // Portrait height is MAX_HEIGHT; fall back to MIN_HEIGHT.
+            val height = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
+                .takeIf { it > 0 } ?: opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
+            val size = when {
+                height in 1 until SHORT_MAX_HEIGHT_DP -> Size.SHORT
+                width in 1 until NARROW_MAX_WIDTH_DP -> Size.NARROW
+                else -> Size.REGULAR
             }
+            size to (if (width > 0) width else 300)
+        } catch (_: Exception) {
+            Size.REGULAR to 300
         }
-    }
-
-    private fun toggleEventInWidget(
-        context: Context,
-        appWidgetId: Int,
-        eventTypeId: Long
-    ) {
-        CoroutineScope(Dispatchers.Default).launch {
-            try {
-                val app = context.applicationContext as LogLifeApplication
-                val eventTypeRepository = app.eventTypeRepository
-                val eventInstanceRepository = app.eventInstanceRepository
-
-                // Get the event type
-                val eventType = eventTypeRepository.getEventTypeById(eventTypeId)
-                if (eventType == null) return@launch
-
-                when (eventType.eventMode) {
-                    EventMode.INSTANT -> {
-                        // For instant events, log immediately
-                        val eventInstance = EventInstance(
-                            eventTypeId = eventTypeId,
-                            startTime = DateTimeUtils.nowUtc()
-                        )
-                        eventInstanceRepository.insertEventInstance(eventInstance)
-                    }
-                    EventMode.DURATION -> {
-                        // For duration events, toggle start/stop
-                        val activeEvents = eventInstanceRepository.getActiveDurationEvents()
-                        val alreadyActive = activeEvents.any { it.eventInstance.eventTypeId == eventTypeId }
-
-                        if (alreadyActive) {
-                            // Find the active instance and stop it
-                            val activeInstanceWithType = activeEvents.first { it.eventInstance.eventTypeId == eventTypeId }
-                            val eventInstanceToStop = activeInstanceWithType.eventInstance.copy(
-                                endTime = DateTimeUtils.nowUtc()
-                            )
-                            eventInstanceRepository.updateEventInstance(eventInstanceToStop)
-                        } else {
-                            // Start the event
-                            val eventInstance = EventInstance(
-                                eventTypeId = eventTypeId,
-                                startTime = DateTimeUtils.nowUtc()
-                            )
-                            eventInstanceRepository.insertEventInstance(eventInstance)
-                        }
-                    }
-                }
-
-                // Refresh the widget to show updated state
-                android.os.Handler(android.os.Looper.getMainLooper()).post {
-                    val appWidgetManager = AppWidgetManager.getInstance(context)
-                    updateAppWidget(context, appWidgetManager, appWidgetId)
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-
-    private fun openAppFromWidget(context: Context, appWidgetId: Int) {
-        val appIntent = Intent(context, MainActivity::class.java).apply {
-            putExtra(EXTRA_WIDGET_ID, appWidgetId)
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
-        context.startActivity(appIntent)
-    }
-
-    private fun openLogEventScreenFromWidget(context: Context, appWidgetId: Int) {
-        val logEventIntent = Intent(context, LogEventActivity::class.java).apply {
-            putExtra(EXTRA_WIDGET_ID, appWidgetId)
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        }
-        context.startActivity(logEventIntent)
-    }
-
-    private fun getWidgetMode(context: Context, appWidgetId: Int): String {
-        // Load from SharedPreferences
-        val prefs = context.getSharedPreferences("widget_config_$appWidgetId", Context.MODE_PRIVATE)
-        return prefs.getString(EXTRA_WIDGET_MODE, WIDGET_MODE_BOTH) ?: WIDGET_MODE_BOTH
-    }
-
-    fun saveWidgetMode(context: Context, appWidgetId: Int, mode: String) {
-        // Save to SharedPreferences
-        val prefs = context.getSharedPreferences("widget_config_$appWidgetId", Context.MODE_PRIVATE)
-        prefs.edit().putString(EXTRA_WIDGET_MODE, mode).apply()
     }
 }

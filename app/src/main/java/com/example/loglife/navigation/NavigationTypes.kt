@@ -5,7 +5,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 /**
  * Marker interface for navigation destinations.
  */
-interface Destination
+sealed interface Destination
 
 /**
  * Data class representing a navigation item.

@@ -1,23 +1,16 @@
 package com.example.loglife.ui.components.smartsidebar
 
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.isDisplayed
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.swipeLeft
-import androidx.compose.ui.test.swipeRight
-import com.example.loglife.ui.components.smartsidebar.SmartSidebar
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
@@ -203,11 +196,63 @@ class SmartSidebarTest {
     }
 
     @Test
-    fun `SmartSidebar requires exactly three destinations`() {
-        // Arrange & Act & Assert
-        // This is tested at compile time via the require() check in the component
-        // We can verify that providing != 3 destinations would cause an error at runtime
-        // For unit testing, we rely on the require() statement
-        assertThat(true).isTrue()
+    fun `SmartSidebar supports up to 10 destinations including six destinations`() {
+        // Arrange
+        val sixDestinations = List(6) { index ->
+            SidebarDestination(
+                destination = "dest_$index",
+                label = "Dest $index",
+                icon = Icons.Default.Home
+            )
+        }
+
+        // Act
+        composeTestRule.setContent {
+            SmartSidebar(
+                destinations = sixDestinations,
+                currentDestination = "dest_0",
+                onDestinationSelected = { /* Handle selection */ }
+            )
+        }
+
+        // Assert
+        composeTestRule.onNodeWithContentDescription("Dest 0 icon").assertExists()
+        composeTestRule.onNodeWithContentDescription("Dest 5 icon").assertExists()
+    }
+
+    @Test
+    fun `SmartSidebarState starts docked and closed on the left`() {
+        val state = SmartSidebarState()
+
+        assertThat(state.edge).isEqualTo(SidebarEdge.Left)
+        assertThat(state.isOpen).isFalse()
+        assertThat(state.isFloating).isFalse()
+    }
+
+    @Test
+    fun `SmartSidebarState moves while floating and docks closed on the chosen edge`() {
+        val state = SmartSidebarState()
+        state.open()
+
+        state.startMove(Offset(0f, 100f))
+        state.moveTo(Offset(300f, 400f))
+        assertThat(state.isFloating).isTrue()
+        assertThat(state.floatingOffset).isEqualTo(Offset(300f, 400f))
+
+        state.dock(SidebarEdge.Right, 0.75f)
+
+        assertThat(state.edge).isEqualTo(SidebarEdge.Right)
+        assertThat(state.verticalFraction).isEqualTo(0.75f)
+        assertThat(state.isFloating).isFalse()
+        assertThat(state.isOpen).isFalse()
+    }
+
+    @Test
+    fun `SmartSidebarState ignores moveTo when not floating`() {
+        val state = SmartSidebarState()
+
+        state.moveTo(Offset(10f, 10f))
+
+        assertThat(state.isFloating).isFalse()
     }
 }

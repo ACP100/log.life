@@ -1,5 +1,9 @@
 <resources>
     <string name="app_name">log.life</string>
-    <string name="widget_label">Life Log</string>
-    <string name="widget_description">See active events and quick-log new ones from your home screen.</string>
+    <string name="widget_label">Quick log deck</string>
+    <string name="widget_description">One tile at a time: running sessions first, then your favourites. Tap to start, stop or log.</string>
+    <string name="quick_buttons_label">Quick buttons</string>
+    <string name="quick_buttons_description">Your first favourites as one-tap buttons.</string>
+    <string name="today_stats_label">Today</string>
+    <string name="today_stats_description">What\'s running and today\'s logs, with your total time.</string>
 </resources>

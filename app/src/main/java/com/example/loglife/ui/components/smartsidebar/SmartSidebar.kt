@@ -10,14 +10,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.util.lerp
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.*
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.*
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
@@ -25,7 +28,13 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.ui.tooling.preview.Preview
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
+
+private val PillWidth = 5.dp
+private val PillHeight = 48.dp
 
 data class SidebarDestination<T>(
     val destination: T,
@@ -33,7 +42,29 @@ data class SidebarDestination<T>(
     val icon: ImageVector
 )
 
-class SmartSidebarState {
+enum class SidebarEdge { Left, Right }
+
+class SmartSidebarState(
+    initialEdge: SidebarEdge = SidebarEdge.Left,
+    initialVerticalFraction: Float = 0.4f
+) {
+    /** Screen edge the sidebar is docked to while at rest. */
+    var edge by mutableStateOf(initialEdge)
+        private set
+
+    /** Docked vertical position: 0 = top of the screen, 1 = bottom. */
+    var verticalFraction by mutableFloatStateOf(initialVerticalFraction.coerceIn(0f, 1f))
+        private set
+
+    /**
+     * Top-left of the fully expanded sidebar (px) while it is detached from an edge, i.e. while
+     * the user is moving it or it is gliding to its edge. Null while docked.
+     */
+    var floatingOffset by mutableStateOf<Offset?>(null)
+        private set
+
+    val isFloating: Boolean get() = floatingOffset != null
+
     var isOpen by mutableStateOf(false)
         private set
 
@@ -72,6 +103,23 @@ class SmartSidebarState {
         dragOffset = offset.coerceIn(-1f, 0f)
     }
 
+    fun startMove(origin: Offset) {
+        isDragging = false
+        floatingOffset = origin
+    }
+
+    fun moveTo(offset: Offset) {
+        if (isFloating) floatingOffset = offset
+    }
+
+    /** Docks the sidebar to [edge] at [verticalFraction] and returns it to its closed state. */
+    fun dock(edge: SidebarEdge, verticalFraction: Float) {
+        this.edge = edge
+        this.verticalFraction = verticalFraction.coerceIn(0f, 1f)
+        floatingOffset = null
+        close()
+    }
+
     fun onDragEnd(velocity: Float) {
         isDragging = false
 
@@ -108,78 +156,156 @@ fun <T> SmartSidebar(
     selectedContentColor: Color = MaterialTheme.colorScheme.primary,
     content: @Composable () -> Unit = {}
 ) {
-    require(destinations.size in 3..5) { "SmartSidebar requires 3 to 5 destinations" }
+    require(destinations.size in 3..10) { "SmartSidebar requires 3 to 10 destinations" }
 
     val density = LocalDensity.current
     val panelWidthPx = with(density) { panelWidth.toPx() }
+    val handleWidthPx = with(density) { handleWidth.toPx() }
+    val rowWidthPx = panelWidthPx + handleWidthPx
 
-    // Animation state
-    val animateOffset by animateFloatAsState(
-        targetValue = if (state.isOpen) 0f else -1f,
+    val scope = rememberCoroutineScope()
+    var settleJob by remember { mutableStateOf<Job?>(null) }
+    var rowHeightPx by remember { mutableIntStateOf(0) }
+    var panelHeightPx by remember { mutableIntStateOf(0) }
+
+    // 0 = closed (only the handle peeks out), 1 = fully expanded. The sidebar is always fully
+    // expanded while it is being moved, and collapses once it has docked to an edge.
+    val animatedProgress by animateFloatAsState(
+        targetValue = if (state.isOpen || state.isFloating) 1f else 0f,
         animationSpec = tween(
             durationMillis = 250,
             easing = FastOutSlowInEasing
         ),
-        label = "SidebarOffset"
+        label = "SidebarProgress"
     )
+    val progress = if (state.isDragging) state.dragOffset + 1f else animatedProgress
 
-    // Calculate the sidebar offset based on state
-    val currentOffsetPx = if (state.isDragging) {
-        state.dragOffset * panelWidthPx
-    } else {
-        animateOffset * panelWidthPx
-    }
-
-    val offsetDp = with(density) { currentOffsetPx.toDp() }
-
-    Box(
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
     ) {
+        val containerWidthPx = constraints.maxWidth.toFloat()
+        val containerHeightPx = constraints.maxHeight.toFloat()
+        val maxX = (containerWidthPx - rowWidthPx).coerceAtLeast(0f)
+        val maxY = (containerHeightPx - rowHeightPx).coerceAtLeast(0f)
+
+        fun edgeFor(x: Float) =
+            if (x + rowWidthPx / 2f < containerWidthPx / 2f) SidebarEdge.Left else SidebarEdge.Right
+
+        fun dockedOrigin(edge: SidebarEdge) = Offset(
+            x = if (edge == SidebarEdge.Left) 0f else maxX,
+            y = state.verticalFraction * maxY
+        )
+
+        // While floating, the edge follows the sidebar so it always shows where it will land.
+        val floating = state.floatingOffset
+        val edge = if (floating != null) edgeFor(floating.x) else state.edge
+        val origin = floating ?: dockedOrigin(state.edge)
+        val openProgress = progress.coerceIn(0f, 1f)
+
         // App Content
         content()
 
         // Scrim overlay when open
-        if (state.isOpen || state.isDragging || animateOffset > -1f) {
-            val alpha = (animateOffset + 1f).coerceIn(0f, 1f) * 0.5f
+        if (!state.isFloating && (state.isOpen || state.isDragging || progress > 0f)) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = alpha))
+                    .background(Color.Black.copy(alpha = progress.coerceIn(0f, 1f) * 0.5f))
                     .pointerInput(Unit) {
                         detectTapGestures { state.close() }
                     }
             )
         }
 
-        // Sidebar panel
-        SidebarPanel(
-            state = state,
-            destinations = destinations,
-            currentDestination = currentDestination,
-            onDestinationSelected = onDestinationSelected,
-            cornerRadius = cornerRadius,
-            elevation = elevation,
-            backgroundColor = backgroundColor,
-            contentColor = contentColor,
-            selectedBackgroundColor = selectedBackgroundColor,
-            selectedContentColor = selectedContentColor,
-            modifier = Modifier
-                .offset(x = offsetDp)
-                .height(200.dp)
-                .width(50.dp)
-        )
+        // Mirror the layout for the right edge instead of reordering children, so the handle's
+        // gesture survives the sidebar crossing the middle of the screen mid-drag.
+        CompositionLocalProvider(
+            LocalLayoutDirection provides
+                if (edge == SidebarEdge.Left) LayoutDirection.Ltr else LayoutDirection.Rtl
+        ) {
+            // The closed sidebar is just the handle pill; opening grows the panel out of it.
+            Box(
+                modifier = Modifier
+                    .absoluteOffset { IntOffset(origin.x.roundToInt(), origin.y.roundToInt()) }
+                    .width(panelWidth + handleWidth)
+                    .onSizeChanged { rowHeightPx = it.height },
+                contentAlignment = Alignment.CenterStart
+            ) {
+                SidebarPanel(
+                    state = state,
+                    destinations = destinations,
+                    currentDestination = currentDestination,
+                    onDestinationSelected = onDestinationSelected,
+                    cornerRadius = cornerRadius,
+                    elevation = elevation,
+                    backgroundColor = backgroundColor,
+                    contentColor = contentColor,
+                    selectedBackgroundColor = selectedBackgroundColor,
+                    selectedContentColor = selectedContentColor,
+                    modifier = Modifier
+                        .wrapContentHeight()
+                        .width(panelWidth)
+                        .onSizeChanged { panelHeightPx = it.height }
+                        .graphicsLayer {
+                            val closedScaleX = with(density) { PillWidth.toPx() } / panelWidthPx
+                            val closedScaleY = if (panelHeightPx > 0) {
+                                with(density) { PillHeight.toPx() } / panelHeightPx
+                            } else 1f
+                            scaleX = lerp(closedScaleX, 1f, openProgress)
+                            scaleY = lerp(closedScaleY.coerceAtMost(1f), 1f, openProgress)
+                            alpha = openProgress
+                            // Grow from the screen edge, centered on the handle.
+                            transformOrigin = TransformOrigin(
+                                if (edge == SidebarEdge.Left) 0f else 1f,
+                                0.5f
+                            )
+                        }
+                )
 
-        // Drag handle
-        SidebarHandle(
-            state = state,
-            panelWidth = panelWidth,
-            modifier = Modifier
-                .offset(x = offsetDp + panelWidth)
-                .height(100.dp)
-//                .fillMaxHeight()
-                .width(5.dp)
-        )
+                SidebarHandle(
+                    state = state,
+                    panelWidth = panelWidth,
+                    handleWidth = handleWidth,
+                    openDirection = if (state.edge == SidebarEdge.Left) 1f else -1f,
+                    openProgress = openProgress,
+                    modifier = Modifier.offset { IntOffset((openProgress * panelWidthPx).roundToInt(), 0) },
+                    onMoveStart = {
+                        settleJob?.cancel()
+                        state.startMove(state.floatingOffset ?: dockedOrigin(state.edge))
+                    },
+                    onMove = { delta ->
+                        state.floatingOffset?.let { current ->
+                            state.moveTo(
+                                Offset(
+                                    (current.x + delta.x).coerceIn(0f, maxX),
+                                    (current.y + delta.y).coerceIn(0f, maxY)
+                                )
+                            )
+                        }
+                    },
+                    onMoveEnd = {
+                        val from = state.floatingOffset
+                        if (from != null) {
+                            val targetEdge = edgeFor(from.x)
+                            val target = dockedOrigin(targetEdge).copy(y = from.y.coerceIn(0f, maxY))
+                            settleJob = scope.launch {
+                                animate(
+                                    typeConverter = Offset.VectorConverter,
+                                    initialValue = from,
+                                    targetValue = target,
+                                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                                ) { value, _ -> state.moveTo(value) }
+                                state.dock(
+                                    targetEdge,
+                                    if (maxY > 0f) target.y / maxY else state.verticalFraction
+                                )
+                            }
+                        }
+                    }
+                )
+            }
+        }
     }
 }
 
@@ -236,32 +362,54 @@ private fun <T> SidebarPanel(
 }
 
 /**
- * The drag handle that allows users to open/close the sidebar.
+ * The handle that opens/closes the sidebar. Tap or drag it to open; press and hold, then drag, to
+ * move the whole sidebar around the screen.
  */
 @Composable
 private fun SidebarHandle(
     state: SmartSidebarState,
     panelWidth: Dp,
+    handleWidth: Dp,
+    openDirection: Float,
+    openProgress: Float,
+    onMoveStart: () -> Unit,
+    onMove: (Offset) -> Unit,
+    onMoveEnd: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val density = LocalDensity.current
     val panelWidthPx = with(density) { panelWidth.toPx() }
+    val haptics = LocalHapticFeedback.current
+    val currentOnMoveStart by rememberUpdatedState(onMoveStart)
+    val currentOnMove by rememberUpdatedState(onMove)
+    val currentOnMoveEnd by rememberUpdatedState(onMoveEnd)
 
-    // Vertical draggable handle
+    // Generous touch target around the slim visible pill.
     Box(
         modifier = modifier
-            .background(
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
-                shape = RoundedCornerShape(
-                    topEnd = 4.dp,
-                    bottomEnd = 4.dp
+            .size(width = handleWidth, height = 72.dp)
+            .pointerInput(Unit) {
+                detectTapGestures { state.toggle() }
+            }
+            .pointerInput(Unit) {
+                detectDragGesturesAfterLongPress(
+                    onDragStart = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        currentOnMoveStart()
+                    },
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        currentOnMove(dragAmount)
+                    },
+                    onDragEnd = { currentOnMoveEnd() },
+                    onDragCancel = { currentOnMoveEnd() }
                 )
-            )
+            }
             .draggable(
+                enabled = !state.isFloating,
                 state = rememberDraggableState { delta ->
                     val currentOffsetPx = state.dragOffset * panelWidthPx
-
-                    val newOffsetPx = (currentOffsetPx + delta)
+                    val newOffsetPx = (currentOffsetPx + delta * openDirection)
                         .coerceIn(-panelWidthPx, 0f)
 
                     state.updateDragOffset(newOffsetPx / panelWidthPx)
@@ -271,32 +419,21 @@ private fun SidebarHandle(
                     state.startDragging()
                 },
                 onDragStopped = { velocity ->
-                    state.onDragEnd(velocity)
+                    state.onDragEnd(velocity * openDirection)
                 }
             )
-            .clip(RectangleShape)
-            .height(20.dp)
-            .width(5.dp)
-    ) {}
-//        // Vertical handle indicator
-//        Column(
-//            modifier = Modifier
-//                .align(Alignment.Center)
-//                .padding(vertical = 12.dp)
-//        ) {
-//            repeat(3) {
-//                Box(
-//                    modifier = Modifier
-//                        .size(4.dp)
-//                        .background(
-//                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-//                            shape = RectangleShape
-//                        )
-//                )
-//                Spacer(modifier = Modifier.height(4.dp))
-//            }
-//        }
-//    }
+    ) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .size(width = PillWidth, height = PillHeight)
+                .graphicsLayer { alpha = 1f - openProgress }
+                .background(
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f),
+                    shape = RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp)
+                )
+        )
+    }
 }
 
 /**
@@ -315,13 +452,13 @@ private fun <T> SidebarDestinationItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
-//            .height(40.dp)
             .background(
                 color = if (isSelected) selectedBackgroundColor else Color.Transparent
             )
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 4.dp)
-
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         // Icon
         Icon(
@@ -329,9 +466,8 @@ private fun <T> SidebarDestinationItem(
             contentDescription = "${destination.label} icon",
             tint = if (isSelected) selectedContentColor else contentColor,
             modifier = Modifier
-                .size(50.dp)
+                .size(24.dp)
                 .align(Alignment.CenterVertically)
-
         )
     }
 }

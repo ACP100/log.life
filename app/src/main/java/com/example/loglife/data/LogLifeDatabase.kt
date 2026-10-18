@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.loglife.data.dao.EventInstanceDao
 import com.example.loglife.data.dao.EventTypeDao
@@ -19,7 +20,7 @@ import java.util.concurrent.Executors
  */
 @Database(
     entities = [EventType::class, EventInstance::class],
-    version = 3 ,
+    version = 4,
     exportSchema = false
 )
 abstract class LogLifeDatabase : RoomDatabase() {
@@ -28,6 +29,14 @@ abstract class LogLifeDatabase : RoomDatabase() {
     abstract fun eventInstanceDao(): EventInstanceDao
 
     companion object {
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE event_types ADD COLUMN color TEXT")
+                db.execSQL("ALTER TABLE event_types ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE event_types ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         @Volatile
         private var INSTANCE: LogLifeDatabase? = null
 
@@ -59,6 +68,7 @@ abstract class LogLifeDatabase : RoomDatabase() {
                         }
                     }
                 })
+                .addMigrations(MIGRATION_3_4)
                 .fallbackToDestructiveMigration() // For simplicity in v1
                 .build()
         }

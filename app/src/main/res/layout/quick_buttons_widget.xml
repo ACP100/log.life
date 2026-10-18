@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Quick buttons (4x1): the first few favourites as one-tap circles that sit
+     straight on the wallpaper. Slots (quick_button_slot) are added in code. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/qb_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="horizontal">
+
+    <TextView
+        android:id="@+id/qb_empty"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/wl_card_bg"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="center"
+        android:text="Pick favourites"
+        android:textColor="@color/wl_ink"
+        android:textSize="14sp"
+        android:visibility="gone" />
+</LinearLayout>

@@ -2,4 +2,13 @@
 <resources>
 
     <style name="Theme.Loglife" parent="Theme.Material3.DayNight" />
+
+    <!-- "Ask first" prompt over the home screen: no window chrome, see-through. -->
+    <style name="Theme.Loglife.Prompt" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
+    </style>
 </resources>

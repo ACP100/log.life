@@ -1,57 +1,50 @@
 package com.example.loglife.ui.theme
 
-import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import com.example.loglife.data.settings.ThemeMode
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
-)
+private fun colorSchemeFor(p: LogPalette, dark: Boolean) = if (dark) {
+    darkColorScheme(
+        primary = p.ink, onPrimary = p.background,
+        secondary = p.inkSecondary, tertiary = p.accent,
+        background = p.background, onBackground = p.ink,
+        surface = p.background, onSurface = p.ink,
+        surfaceVariant = p.surface, onSurfaceVariant = p.inkSecondary,
+        surfaceContainerLow = p.surface, surfaceContainer = p.surface, surfaceContainerHigh = p.surface,
+        outline = p.sheetBorder, outlineVariant = p.sheetDivider, error = p.accent,
+    )
+} else {
+    lightColorScheme(
+        primary = p.ink, onPrimary = p.surface,
+        secondary = p.inkSecondary, tertiary = p.accent,
+        background = p.background, onBackground = p.ink,
+        surface = p.background, onSurface = p.ink,
+        surfaceVariant = p.surface, onSurfaceVariant = p.inkSecondary,
+        surfaceContainerLow = p.surface, surfaceContainer = p.surface, surfaceContainerHigh = p.surface,
+        outline = p.sheetBorder, outlineVariant = p.sheetDivider, error = p.accent,
+    )
+}
 
 @Composable
 fun LoglifeTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    themeMode: ThemeMode = ThemeMode.SYSTEM,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+    val dark = when (themeMode) {
+        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
     }
+    val palette = if (dark) DarkPalette else LightPalette
+    // Written before any child reads it, so no backwards write.
+    if (currentPalette != palette) currentPalette = palette
 
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = colorSchemeFor(palette, dark),
         typography = Typography,
         content = content
     )

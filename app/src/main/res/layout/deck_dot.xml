@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One page indicator in the deck's dot strip. -->
+<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/deck_dot"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="2.5dp"
+    android:layout_marginEnd="2.5dp"
+    android:importantForAccessibility="no"
+    android:src="@drawable/wl_dot_filled" />

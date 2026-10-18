@@ -1,489 +1,153 @@
 package com.example.loglife.ui.home
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.isDisplayed
-import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.swipeLeft
-import androidx.compose.ui.test.swipeRight
-import androidx.compose.ui.test.swipeUp
-import androidx.compose.ui.test.swipeDown
+import androidx.compose.ui.test.performScrollTo
 import com.example.loglife.data.dao.EventInstanceWithType
-import com.example.loglife.viewmodel.MainViewModel
-import com.example.loglife.util.DateTimeUtils
+import com.example.loglife.data.model.EventInstance
+import com.example.loglife.data.model.EventMode
+import com.example.loglife.data.model.EventType
 import com.google.common.truth.Truth.assertThat
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers.any
-import org.mockito.Mock
-import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.material3.ExperimentalMaterial3Api
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
+import com.example.loglife.util.formatDurationShort
+import com.example.loglife.util.formatElapsedLong
+import com.example.loglife.util.formatElapsedCompact
 
-/**
- * Tests for HomeScreen functionality.
- */
-@OptIn(ExperimentalCoroutinesApi::class, ExperimentalMaterial3Api::class)
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class HomeScreenTest {
 
-    // Create a Compose rule for testing UI components
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    @Mock
-    private lateinit var viewModel: MainViewModel
+    private val day = LocalDate.of(2026, 10, 19)
 
-    // Test data
-    private val testEventTypeId = 1L
-    private val testEventTypeName = "Test Event"
-    private val testEventInstanceId = 1L
-    private val testStartTime = 1000L
-    private val testEndTime = 2000L
-
-    @Before
-    fun setUp() {
-        MockitoAnnotations.initMocks(this)
+    private fun at(hhmm: String): Long {
+        val (h, m) = hhmm.split(":").map { it.toInt() }
+        return day.atTime(LocalTime.of(h, m)).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
     }
 
-    @Test
-    fun `HomeScreen displays loading indicator when isLoading is true`() {
-        // Arrange
-        val loadingState = MutableStateFlow(true)
-        `when`(viewModel.isLoading).thenReturn(loadingState as StateFlow<Boolean>)
-        `when`(viewModel.activeEvents).thenReturn(MutableStateFlow<List<EventInstanceWithType>>(emptyList()))
-        `when`(viewModel.recentEvent).thenReturn(MutableStateFlow(null) as StateFlow<EventInstanceWithType?>)
+    private fun event(
+        id: Long,
+        name: String,
+        category: String,
+        start: String,
+        end: String? = null,
+        mode: EventMode = EventMode.DURATION
+    ) = EventInstanceWithType(
+        eventInstance = EventInstance(id = id, eventTypeId = id, startTime = at(start), endTime = end?.let(::at)),
+        eventType = EventType(id = id, name = name, icon = "event", eventMode = mode, category = category)
+    )
 
-        // Act
-        composeTestRule.setContent({
-            HomeScreen(
-                viewModel = viewModel,
-                onNavigateToLogEvent = { },
-                onNavigateToCalendar = { },
-                onNavigateToReport = { },
-                onNavigateToEventManagement = { },
-                onNavigateToSettings = { }
+    private fun render(
+        today: List<EventInstanceWithType>,
+        now: String,
+        onLog: () -> Unit = {},
+        onStop: (Long) -> Unit = {},
+        onSeeYesterday: () -> Unit = {}
+    ) {
+        val active = today.filter { it.eventType.eventMode == EventMode.DURATION && it.eventInstance.endTime == null }
+        composeTestRule.setContent {
+            HomeScreenContent(
+                state = buildHomeUiState(today, active),
+                date = day,
+                now = at(now),
+                onStop = onStop,
+                onLogSomething = onLog,
+                onSeeYesterday = onSeeYesterday
             )
-        })
-
-        // Assert
-        composeTestRule.onNodeWithText("Life Log").assertIsDisplayed()
+        }
     }
 
     @Test
-    fun `HomeScreen displays empty state when no events`() {
-        // Arrange
-        `when`(viewModel.isLoading).thenReturn(MutableStateFlow(false) as StateFlow<Boolean>)
-        `when`(viewModel.activeEvents).thenReturn(MutableStateFlow<List<EventInstanceWithType>>(emptyList()))
-        `when`(viewModel.recentEvent).thenReturn(MutableStateFlow(null) as StateFlow<EventInstanceWithType?>)
+    fun `empty day shows nothing running and blank day`() {
+        var seeYesterday = false
+        render(emptyList(), now = "06:30", onSeeYesterday = { seeYesterday = true })
 
-        // Act
-        composeTestRule.setContent({
-            HomeScreen(
-                viewModel = viewModel,
-                onNavigateToLogEvent = { },
-                onNavigateToCalendar = { },
-                onNavigateToReport = { },
-                onNavigateToEventManagement = { },
-                onNavigateToSettings = { }
-            )
-        })
-
-        // Assert
-        composeTestRule.onNodeWithText("No events logged yet").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Tap the + button to log your first event").assertIsDisplayed()
-        // Verify that event sections are not displayed
-        composeTestRule.onNodeWithText("Currently").assertDoesNotExist()
-        composeTestRule.onNodeWithText("Currently logging").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Today").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Nothing running").assertIsDisplayed()
+        composeTestRule.onNodeWithText("A blank day").assertIsDisplayed()
+        composeTestRule.onNodeWithText("See yesterday").performScrollTo().performClick()
+        assertThat(seeYesterday).isTrue()
     }
 
     @Test
-    fun `HomeScreen displays active events when present`() {
-        // Arrange
-        val activeEvent = EventInstanceWithType(
-            eventInstance = com.example.loglife.data.model.EventInstance(
-                id = testEventInstanceId,
-                eventTypeId = testEventTypeId,
-                startTime = testStartTime,
-                endTime = null // Active event
+    fun `logs without running hides running section`() {
+        render(
+            listOf(
+                event(1, "Woke up", "Routine", "07:00", mode = EventMode.INSTANT),
+                event(2, "Deep work", "Work", "09:10", "10:15")
             ),
-            eventType = com.example.loglife.data.model.EventType(
-                id = testEventTypeId,
-                name = testEventTypeName,
-                category = "Test Category",
-                icon = "event",
-                eventMode = com.example.loglife.data.model.EventMode.DURATION
-            )
+            now = "12:00"
         )
 
-        `when`(viewModel.isLoading).thenReturn(MutableStateFlow(false) as StateFlow<Boolean>)
-        `when`(viewModel.activeEvents).thenReturn(MutableStateFlow(listOf(activeEvent)) as StateFlow<List<EventInstanceWithType>>)
-        `when`(viewModel.recentEvent).thenReturn(MutableStateFlow(null) as StateFlow<EventInstanceWithType?>)
-
-        // Act
-        composeTestRule.setContent({
-            HomeScreen(
-                viewModel = viewModel,
-                onNavigateToLogEvent = { },
-                onNavigateToCalendar = { },
-                onNavigateToReport = { },
-                onNavigateToEventManagement = { },
-                onNavigateToSettings = { }
-            )
-        })
-
-        // Assert
-        composeTestRule.onNodeWithText(testEventTypeName).assertIsDisplayed()
-        // Verify duration is displayed for active events
-        composeTestRule.onNodeWithText("●", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("RUNNING NOW").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Nothing running").assertDoesNotExist()
+        composeTestRule.onNodeWithText("2 logs · 1h 05m").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Work · until 10:15").assertIsDisplayed()
     }
 
     @Test
-    fun `HomeScreen displays completed active events when present`() {
-        // Arrange
-        val activeEvent = EventInstanceWithType(
-            eventInstance = com.example.loglife.data.model.EventInstance(
-                id = testEventInstanceId,
-                eventTypeId = testEventTypeId,
-                startTime = testStartTime,
-                endTime = testEndTime // Completed event
-            ),
-            eventType = com.example.loglife.data.model.EventType(
-                id = testEventTypeId,
-                name = testEventTypeName,
-                category = "Test Category",
-                icon = "event",
-                eventMode = com.example.loglife.data.model.EventMode.DURATION
-            )
+    fun `running event shows live timer and stop`() {
+        var stopped: Long? = null
+        render(listOf(event(5, "Deep work", "Work", "11:42")), now = "13:19", onStop = { stopped = it })
+
+        composeTestRule.onNodeWithText("RUNNING NOW").assertIsDisplayed()
+        composeTestRule.onNodeWithText("1:37:00").assertIsDisplayed()
+        composeTestRule.onNodeWithText("since 11:42").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Stop").performClick()
+        assertThat(stopped).isEqualTo(5L)
+    }
+
+    @Test
+    fun `log something button navigates`() {
+        var logged = false
+        render(emptyList(), now = "08:00", onLog = { logged = true })
+
+        composeTestRule.onNodeWithText("Log something").performClick()
+        assertThat(logged).isTrue()
+    }
+
+    @Test
+    fun `concurrent running events mark the newer one as during the older`() {
+        val state = buildHomeUiState(
+            today = emptyList(),
+            active = listOf(event(1, "Work", "Work", "09:00"), event(2, "Lunch", "Food", "11:05"))
         )
 
-        `when`(viewModel.isLoading).thenReturn(MutableStateFlow(false) as StateFlow<Boolean>)
-        `when`(viewModel.activeEvents).thenReturn(MutableStateFlow(listOf(activeEvent)) as StateFlow<List<EventInstanceWithType>>)
-        `when`(viewModel.recentEvent).thenReturn(MutableStateFlow(null) as StateFlow<EventInstanceWithType?>)
-
-        // Act
-        composeTestRule.setContent({
-            HomeScreen(
-                viewModel = viewModel,
-                onNavigateToLogEvent = { },
-                onNavigateToCalendar = { },
-                onNavigateToReport = { },
-                onNavigateToEventManagement = { },
-                onNavigateToSettings = { }
-            )
-        })
-
-        // Assert
-        composeTestRule.onNodeWithText(testEventTypeName).assertIsDisplayed()
-        // Verify time range is displayed for completed events
-        composeTestRule.onNodeWithText("${DateTimeUtils.formatTime(testStartTime)} → ${DateTimeUtils.formatTime(testEndTime)}").assertIsDisplayed()
+        assertThat(state.running.map { it.name }).containsExactly("Lunch", "Work").inOrder()
+        assertThat(state.running[0].duringName).isEqualTo("Work")
+        assertThat(state.running[1].duringName).isNull()
     }
 
     @Test
-    fun `HomeScreen displays recent event when present`() {
-        // Arrange
-        val recentEvent = EventInstanceWithType(
-            eventInstance = com.example.loglife.data.model.EventInstance(
-                id = testEventInstanceId,
-                eventTypeId = testEventTypeId,
-                startTime = testStartTime,
-                endTime = testEndTime // Completed event
-            ),
-            eventType = com.example.loglife.data.model.EventType(
-                id = testEventTypeId,
-                name = testEventTypeName,
-                category = "Test Category",
-                icon = "event",
-                eventMode = com.example.loglife.data.model.EventMode.INSTANT
-            )
-        )
+    fun `completed log inside a running event is noted on both`() {
+        val work = event(1, "Work", "Work", "09:00")
+        val lunch = event(2, "Lunch", "Food", "11:05", "11:45")
+        val state = buildHomeUiState(today = listOf(work, lunch), active = listOf(work))
 
-        `when`(viewModel.isLoading).thenReturn(MutableStateFlow(false) as StateFlow<Boolean>)
-        `when`(viewModel.activeEvents).thenReturn(MutableStateFlow<List<EventInstanceWithType>>(emptyList()))
-        `when`(viewModel.recentEvent).thenReturn(MutableStateFlow(recentEvent) as StateFlow<EventInstanceWithType?>)
-
-        // Act
-        composeTestRule.setContent({
-            HomeScreen(
-                viewModel = viewModel,
-                onNavigateToLogEvent = { },
-                onNavigateToCalendar = { },
-                onNavigateToReport = { },
-                onNavigateToEventManagement = { },
-                onNavigateToSettings = { }
-            )
-        })
-
-        // Assert
-        composeTestRule.onNodeWithText(testEventTypeName).assertIsDisplayed()
-        // Verify time is displayed for instant events
-        composeTestRule.onNodeWithText(DateTimeUtils.formatTime(testStartTime)).assertIsDisplayed()
+        assertThat(state.running.single().insideNote).isEqualTo("Lunch 40m inside")
+        assertThat(state.logged.single().duringName).isEqualTo("Work")
+        assertThat(state.totalLoggedMillis).isEqualTo(40 * 60_000L)
     }
 
     @Test
-    fun `HomeScreen displays both active and recent events when both present`() {
-        // Arrange
-        val activeEvent = EventInstanceWithType(
-            eventInstance = com.example.loglife.data.model.EventInstance(
-                id = testEventInstanceId,
-                eventTypeId = testEventTypeId,
-                startTime = testStartTime,
-                endTime = null // Active event
-            ),
-            eventType = com.example.loglife.data.model.EventType(
-                id = testEventTypeId,
-                name = testEventTypeName,
-                category = "Test Category",
-                icon = "event",
-                eventMode = com.example.loglife.data.model.EventMode.DURATION
-            )
-        )
-
-        val recentEvent = EventInstanceWithType(
-            eventInstance = com.example.loglife.data.model.EventInstance(
-                id = testEventInstanceId + 1,
-                eventTypeId = testEventTypeId + 1,
-                startTime = testStartTime - 10000,
-                endTime = testStartTime - 5000 // Completed event
-            ),
-            eventType = com.example.loglife.data.model.EventType(
-                id = testEventTypeId + 1,
-                name = "Recent Event",
-                category = "Recent Category",
-                icon = "recent",
-                eventMode = com.example.loglife.data.model.EventMode.INSTANT
-            )
-        )
-
-        `when`(viewModel.isLoading).thenReturn(MutableStateFlow(false) as StateFlow<Boolean>)
-        `when`(viewModel.activeEvents).thenReturn(MutableStateFlow(listOf(activeEvent)) as StateFlow<List<EventInstanceWithType>>)
-        `when`(viewModel.recentEvent).thenReturn(MutableStateFlow(recentEvent) as StateFlow<EventInstanceWithType?>)
-
-        // Act
-        composeTestRule.setContent({
-            HomeScreen(
-                viewModel = viewModel,
-                onNavigateToLogEvent = { },
-                onNavigateToCalendar = { },
-                onNavigateToReport = { },
-                onNavigateToEventManagement = { },
-                onNavigateToSettings = { }
-            )
-        })
-
-        // Assert
-        // Active event should be displayed
-        composeTestRule.onNodeWithText(testEventTypeName).assertIsDisplayed()
-
-        // Recent event should be displayed
-        composeTestRule.onNodeWithText("Recent Event").assertIsDisplayed()
-        // Verify time is displayed for recent instant event
-        composeTestRule.onNodeWithText(DateTimeUtils.formatTime(testStartTime - 10000)).assertIsDisplayed()
-    }
-
-    @Test
-    fun `HomeScreen navigate to log event when expandable menu is clicked`() {
-        // Arrange
-        var navigateToLogEventCalled = false
-        `when`(viewModel.isLoading).thenReturn(MutableStateFlow(false) as StateFlow<Boolean>)
-        `when`(viewModel.activeEvents).thenReturn(MutableStateFlow<List<EventInstanceWithType>>(emptyList()))
-        `when`(viewModel.recentEvent).thenReturn(MutableStateFlow(null) as StateFlow<EventInstanceWithType?>)
-
-        // Act
-        composeTestRule.setContent({
-            HomeScreen(
-                viewModel = viewModel,
-                onNavigateToLogEvent = { navigateToLogEventCalled = true },
-                onNavigateToCalendar = { },
-                onNavigateToReport = { },
-                onNavigateToEventManagement = { },
-                onNavigateToSettings = { }
-            )
-        })
-
-        // Click the expandable menu (the + button), then choose Log
-        composeTestRule.onNodeWithContentDescription("Expand Menu").performClick()
-        composeTestRule.waitForIdle()
-        composeTestRule.onNodeWithText("Log").performClick()
-
-        // Assert
-        assertThat(navigateToLogEventCalled).isTrue()
-    }
-
-    @Test
-    fun `HomeScreen navigate to calendar when calendar button is clicked`() {
-        // Arrange
-        var navigateToCalendarCalled = false
-        `when`(viewModel.isLoading).thenReturn(MutableStateFlow(false) as StateFlow<Boolean>)
-        `when`(viewModel.activeEvents).thenReturn(MutableStateFlow<List<EventInstanceWithType>>(emptyList()))
-        `when`(viewModel.recentEvent).thenReturn(MutableStateFlow(null) as StateFlow<EventInstanceWithType?>)
-
-        // Act
-        composeTestRule.setContent({
-            HomeScreen(
-                viewModel = viewModel,
-                onNavigateToLogEvent = { },
-                onNavigateToCalendar = { navigateToCalendarCalled = true },
-                onNavigateToReport = { },
-                onNavigateToEventManagement = { },
-                onNavigateToSettings = { }
-            )
-        })
-
-        // For now, we'll just verify the screen renders without error
-        // In a more detailed test, we'd interact with the expandable menu
-        assertThat(true).isTrue()
-    }
-
-    @Test
-    fun `HomeScreen navigate to report when report button is clicked`() {
-        // Arrange
-        var navigateToReportCalled = false
-        `when`(viewModel.isLoading).thenReturn(MutableStateFlow(false) as StateFlow<Boolean>)
-        `when`(viewModel.activeEvents).thenReturn(MutableStateFlow<List<EventInstanceWithType>>(emptyList()))
-        `when`(viewModel.recentEvent).thenReturn(MutableStateFlow(null) as StateFlow<EventInstanceWithType?>)
-
-        // Act
-        composeTestRule.setContent({
-            HomeScreen(
-                viewModel = viewModel,
-                onNavigateToLogEvent = { },
-                onNavigateToCalendar = { },
-                onNavigateToReport = { navigateToReportCalled = true },
-                onNavigateToEventManagement = { },
-                onNavigateToSettings = { }
-            )
-        })
-
-        // For now, we'll just verify the screen renders without error
-        // In a more detailed test, we'd interact with the expandable menu
-        assertThat(true).isTrue()
-    }
-
-    @Test
-    fun `HomeScreen navigate to event management when event management button is clicked`() {
-        // Arrange
-        var navigateToEventManagementCalled = false
-        `when`(viewModel.isLoading).thenReturn(MutableStateFlow(false) as StateFlow<Boolean>)
-        `when`(viewModel.activeEvents).thenReturn(MutableStateFlow<List<EventInstanceWithType>>(emptyList()))
-        `when`(viewModel.recentEvent).thenReturn(MutableStateFlow(null) as StateFlow<EventInstanceWithType?>)
-
-        // Act
-        composeTestRule.setContent({
-            HomeScreen(
-                viewModel = viewModel,
-                onNavigateToLogEvent = { },
-                onNavigateToCalendar = { },
-                onNavigateToReport = { },
-                onNavigateToEventManagement = { navigateToEventManagementCalled = true },
-                onNavigateToSettings = { }
-            )
-        })
-
-        // For now, we'll just verify the screen renders without error
-        // In a more detailed test, we'd interact with the expandable menu
-        assertThat(true).isTrue()
-    }
-
-    @Test
-    fun `HomeScreen navigate to settings when settings button is clicked`() {
-        // Arrange
-        var navigateToSettingsCalled = false
-        `when`(viewModel.isLoading).thenReturn(MutableStateFlow(false) as StateFlow<Boolean>)
-        `when`(viewModel.activeEvents).thenReturn(MutableStateFlow<List<EventInstanceWithType>>(emptyList()))
-        `when`(viewModel.recentEvent).thenReturn(MutableStateFlow(null) as StateFlow<EventInstanceWithType?>)
-
-        // Act
-        composeTestRule.setContent({
-            HomeScreen(
-                viewModel = viewModel,
-                onNavigateToLogEvent = { },
-                onNavigateToCalendar = { },
-                onNavigateToReport = { },
-                onNavigateToEventManagement = { },
-                onNavigateToSettings = { navigateToSettingsCalled = true }
-            )
-        })
-
-        // Click the Settings action in the top bar
-        composeTestRule.onNodeWithContentDescription("Settings").performClick()
-
-        // Assert
-        assertThat(navigateToSettingsCalled).isTrue()
-    }
-
-    @Test
-    fun `HomeScreen handles multiple active events`() {
-        // Arrange
-        val activeEvent1 = EventInstanceWithType(
-            eventInstance = com.example.loglife.data.model.EventInstance(
-                id = testEventInstanceId,
-                eventTypeId = testEventTypeId,
-                startTime = testStartTime,
-                endTime = null // Active event
-            ),
-            eventType = com.example.loglife.data.model.EventType(
-                id = testEventTypeId,
-                name = testEventTypeName,
-                category = "Test Category",
-                icon = "event",
-                eventMode = com.example.loglife.data.model.EventMode.DURATION
-            )
-        )
-
-        val activeEvent2 = EventInstanceWithType(
-            eventInstance = com.example.loglife.data.model.EventInstance(
-                id = testEventInstanceId + 1,
-                eventTypeId = testEventTypeId + 1,
-                startTime = testStartTime - 5000,
-                endTime = null // Active event
-            ),
-            eventType = com.example.loglife.data.model.EventType(
-                id = testEventTypeId + 1,
-                name = "Second Active Event",
-                category = "Second Category",
-                icon = "second",
-                eventMode = com.example.loglife.data.model.EventMode.DURATION
-            )
-        )
-
-        `when`(viewModel.isLoading).thenReturn(MutableStateFlow(false) as StateFlow<Boolean>)
-        `when`(viewModel.activeEvents).thenReturn(MutableStateFlow(listOf(activeEvent1, activeEvent2)) as StateFlow<List<EventInstanceWithType>>)
-        `when`(viewModel.recentEvent).thenReturn(MutableStateFlow(null) as StateFlow<EventInstanceWithType?>)
-
-        // Act
-        composeTestRule.setContent({
-            HomeScreen(
-                viewModel = viewModel,
-                onNavigateToLogEvent = { },
-                onNavigateToCalendar = { },
-                onNavigateToReport = { },
-                onNavigateToEventManagement = { },
-                onNavigateToSettings = { }
-            )
-        })
-
-        // Assert
-        // First active event should be displayed
-        composeTestRule.onNodeWithText(testEventTypeName).assertIsDisplayed()
-
-        // Second active event should be displayed
-        composeTestRule.onNodeWithText("Second Active Event").assertIsDisplayed()
+    fun `duration and elapsed formatting`() {
+        assertThat(formatDurationShort(50 * 60_000L)).isEqualTo("50m")
+        assertThat(formatDurationShort(65 * 60_000L)).isEqualTo("1h 05m")
+        assertThat(formatElapsedLong(19 * 60_000L + 4_000)).isEqualTo("0:19:04")
+        assertThat(formatElapsedCompact(24 * 60_000L + 8_000)).isEqualTo("24:08")
+        assertThat(formatElapsedCompact(2 * 3_600_000L + 24 * 60_000L + 10_000)).isEqualTo("2:24:10")
     }
 }
