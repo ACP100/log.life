@@ -317,6 +317,14 @@ internal fun WidgetThumbnail(kind: WidgetKind, size: Dp = 56.dp) {
                         else drawCircle(c, radius = h * 0.12f, center = center, style = Stroke(width = h * 0.06f))
                     }
                 }
+                WidgetKind.TILE -> {
+                    val c = Color(0xFFC98A1E)
+                    val side = h * 0.78f
+                    val left = (w - side) / 2f
+                    drawRoundRect(Color(0xFFEDE3CF), topLeft = Offset(left, h * 0.11f), size = Size(side, side), cornerRadius = CornerRadius(8f))
+                    drawCircle(c, radius = h * 0.08f, center = Offset(left + side * 0.28f, h * 0.11f + side * 0.28f), style = Stroke(width = h * 0.045f))
+                    drawRoundRect(ink, topLeft = Offset(left + side * 0.18f, h * 0.11f + side * 0.62f), size = Size(side * 0.6f, side * 0.12f), cornerRadius = CornerRadius(3f))
+                }
                 WidgetKind.TODAY -> {
                     drawRoundRect(ink, topLeft = Offset(w * 0.1f, h * 0.16f), size = Size(w * 0.5f, h * 0.12f), cornerRadius = CornerRadius(3f))
                     drawRoundRect(ink, topLeft = Offset(w * 0.1f, h * 0.38f), size = Size(w * 0.8f, h * 0.14f), cornerRadius = CornerRadius(3f))

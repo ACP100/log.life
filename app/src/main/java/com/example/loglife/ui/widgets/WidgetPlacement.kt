@@ -4,10 +4,11 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 
-/** The three home-screen widgets, as the Widgets pages list them. */
+/** The home-screen widgets, as the Widgets pages list them. */
 enum class WidgetKind(val title: String, val provider: Class<*>) {
     DECK("Quick log deck", EventLogWidgetProvider::class.java),
     BUTTONS("Quick buttons", QuickButtonsWidgetProvider::class.java),
+    TILE("Single tile", SingleTileWidgetProvider::class.java),
     TODAY("Today", TodayStatsWidgetProvider::class.java),
 }
 
@@ -26,7 +27,7 @@ object WidgetPlacement {
             // Portrait height is MAX_HEIGHT; fall back to MIN_HEIGHT.
             val height = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
                 .takeIf { it > 0 } ?: opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
-            PlacedWidget(id, cells(width, default = 4), cells(height, default = if (kind == WidgetKind.BUTTONS) 1 else 2))
+            PlacedWidget(id, cells(width, default = if (kind == WidgetKind.TILE) 1 else 4), cells(height, default = if (kind == WidgetKind.BUTTONS || kind == WidgetKind.TILE) 1 else 2))
         }
     } catch (_: Exception) {
         emptyList()

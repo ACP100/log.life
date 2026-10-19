@@ -6,4 +6,6 @@
     <string name="quick_buttons_description">Your first favourites as one-tap buttons.</string>
     <string name="today_stats_label">Today</string>
     <string name="today_stats_description">What\'s running and today\'s logs, with your total time.</string>
+    <string name="single_tile_label">Single tile</string>
+    <string name="single_tile_description">One event of your choice as a 1×1 tile. Tap to log, start or stop it.</string>
 </resources>

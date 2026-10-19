@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Single tile (1x1): one event the user picked for this widget. The whole
+     widget is the tile: idle = event colour washed into the card, running =
+     ink with a live timer. No ?attr references (inflated by the launcher). -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tile_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/tile_bg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
+        android:src="@drawable/wl_single_bg" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="10dp">
+
+        <ImageView
+            android:id="@+id/tile_dot"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/wl_dot_ring" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/tile_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
+            android:includeFontPadding="false"
+            android:maxLines="2"
+            android:text="Coffee"
+            android:textColor="@color/wl_ink"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <Chronometer
+            android:id="@+id/tile_timer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:fontFamily="monospace"
+            android:maxLines="1"
+            android:textColor="@color/wl_on_ink"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tile_last"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:fontFamily="monospace"
+            android:maxLines="1"
+            android:text="07:40"
+            android:textColor="@color/wl_muted"
+            android:textSize="11sp" />
+    </LinearLayout>
+</FrameLayout>

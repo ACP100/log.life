@@ -19,6 +19,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,7 +41,11 @@ import com.example.loglife.ui.theme.HomeSurface
 import com.example.loglife.ui.theme.sheetMono
 import com.example.loglife.ui.theme.sheetText
 import com.example.loglife.ui.widgets.PlacedWidget
+import com.example.loglife.ui.widgets.SingleTileConfigureActivity
+import com.example.loglife.ui.widgets.SingleTileStore
 import com.example.loglife.ui.widgets.WidgetKind
+import com.example.loglife.ui.widgets.WidgetPlacement
+import com.example.loglife.data.model.EventMode
 import com.example.loglife.ui.widgets.WidgetSync
 
 /** Settings → Widgets → one widget. */
@@ -56,6 +61,7 @@ fun WidgetDetailScreen(
     when (kind) {
         WidgetKind.DECK -> DeckSettings(state, placed, onBack, onOpenFavourites, viewModel::updateSettings)
         WidgetKind.BUTTONS -> ButtonsSettings(state, onBack, onOpenFavourites, viewModel::updateSettings)
+        WidgetKind.TILE -> TileSettings(state, placed, onBack)
         WidgetKind.TODAY -> TodaySettings(state, onBack, viewModel::updateSettings)
     }
 }
@@ -131,6 +137,48 @@ private fun ButtonsSettings(
             CardDivider()
             NavRow(title = "Buttons", subtitle = "The first favourites, in your order", onClick = onOpenFavourites)
         }
+    }
+}
+
+/**
+ * Single tiles: each placed 1×1 tile with the event it logs. Tapping one
+ * reopens its picker; "Add a tile" pins a new one (the picker runs first).
+ */
+@Composable
+private fun TileSettings(state: WidgetsState, placed: List<PlacedWidget>, onBack: () -> Unit) {
+    val context = LocalContext.current
+    val types = (state.favourites + state.others).associateBy { it.id }
+    SettingsPage(
+        title = WidgetKind.TILE.title,
+        backLabel = "Widgets",
+        onBack = onBack,
+        subtitle = "A 1×1 tile for one event you choose. Place as many as you like, each with its own event."
+    ) {
+        SectionLabel("Placed · ${placed.size}")
+        SettingsCard {
+            placed.forEachIndexed { i, w ->
+                if (i > 0) CardDivider()
+                val type = SingleTileStore.get(context, w.id)?.let { types[it] }
+                NavRow(
+                    title = type?.name ?: "No event picked",
+                    subtitle = type?.let { if (it.eventMode == EventMode.DURATION) "Session · tap starts and stops" else "Moment · tap logs it" }
+                        ?: "The tile shows “Pick event”",
+                    value = "Change",
+                    onClick = { context.startActivity(SingleTileConfigureActivity.intent(context, w.id)) }
+                )
+            }
+            if (placed.isNotEmpty()) CardDivider()
+            AddRow(
+                label = "Add a tile to your home screen",
+                enabled = true,
+                onClick = { WidgetPlacement.requestPin(context, WidgetKind.TILE) }
+            )
+        }
+        Text(
+            "You can also long-press a tile on your home screen to change its event.",
+            style = sheetText(13.sp, color = HomeInkSecondary),
+            modifier = Modifier.padding(start = 4.dp, top = 12.dp)
+        )
     }
 }
 

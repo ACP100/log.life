@@ -32,10 +32,11 @@ object DeleteDataDestination : Destination
  */
 object WidgetManagerDestination : Destination
 
-/** Settings → Widgets → Quick log deck / Quick buttons / Today. */
+/** Settings → Widgets → Quick log deck / Quick buttons / Single tile / Today. */
 object DeckWidgetDestination : Destination
 object ButtonsWidgetDestination : Destination
 object TodayWidgetDestination : Destination
+object TileWidgetDestination : Destination
 
 /** Settings → Widgets → Cards / Buttons: reorder the favourites. */
 object WidgetFavouritesDestination : Destination
