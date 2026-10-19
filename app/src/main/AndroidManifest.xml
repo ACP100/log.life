@@ -70,23 +70,10 @@
                 android:resource="@xml/quick_buttons_widget_info" />
         </receiver>
 
-        <!-- Single tile widget (1x1, one picked event) -->
-        <receiver
-            android:name=".ui.widgets.SingleTileWidgetProvider"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.example.loglife.action.WIDGET_ITEM_CLICK" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/single_tile_widget_info" />
-        </receiver>
-
-        <!-- Event picker for a Single tile. Exported: the launcher starts it
-             when the tile is placed or reconfigured. -->
+        <!-- Picks the events for one Quick buttons widget. Exported: the
+             launcher starts it when the widget is placed or reconfigured. -->
         <activity
-            android:name=".ui.widgets.SingleTileConfigureActivity"
+            android:name=".ui.widgets.QuickButtonsConfigureActivity"
             android:exported="true"
             android:excludeFromRecents="true"
             android:taskAffinity=""

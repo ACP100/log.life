@@ -83,30 +83,14 @@ object WidgetData {
         }
     }
 
-    /** The Single tile's event, or null if it was never picked, deleted or archived. */
-    suspend fun loadSingle(appContext: Context, eventTypeId: Long?): Tile? {
-        if (eventTypeId == null) return null
-        val app = appContext as? LogLifeApplication ?: return null
-        return try {
-            buildSingle(
-                type = app.eventTypeRepository.getEventTypeById(eventTypeId),
-                active = app.eventInstanceRepository.getActiveDurationEvents(),
-                lastStart = app.eventInstanceRepository.getEventTypeStats()
-                    .firstOrNull { it.eventTypeId == eventTypeId }?.lastStart,
-            )
-        } catch (_: Exception) {
-            null
-        }
-    }
-
-    fun buildSingle(type: EventType?, active: List<EventInstanceWithType>, lastStart: Long?): Tile? {
-        if (type == null || type.archived) return null
-        val running = runningOldestFirst(active).firstOrNull { it.eventInstance.eventTypeId == type.id }
-        return type.toTile(
-            instanceId = running?.eventInstance?.id ?: -1L,
-            runningSince = running?.eventInstance?.startTime,
-            lastStart = lastStart,
-        )
+    /**
+     * Events a Quick buttons widget picked for itself, in the picked order.
+     * Deleted and archived events are dropped (the widget then asks to pick
+     * again if none are left).
+     */
+    fun pickedTypes(all: List<EventType>, pickedIds: List<Long>): List<EventType> {
+        val byId = all.filterNot { it.archived }.associateBy { it.id }
+        return pickedIds.distinct().mapNotNull { byId[it] }
     }
 
     suspend fun loadToday(

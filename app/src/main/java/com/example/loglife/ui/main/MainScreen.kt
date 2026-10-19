@@ -31,7 +31,6 @@ import com.example.loglife.navigation.HomeDestination
 import com.example.loglife.navigation.NavigationItem
 import com.example.loglife.navigation.NavigationViewModel
 import com.example.loglife.navigation.SettingsDestination
-import com.example.loglife.navigation.TileWidgetDestination
 import com.example.loglife.navigation.TodayWidgetDestination
 import com.example.loglife.navigation.WidgetFavouritesDestination
 import com.example.loglife.navigation.WidgetManagerDestination
@@ -125,17 +124,15 @@ fun MainScreen(
                             when (kind) {
                                 WidgetKind.DECK -> DeckWidgetDestination
                                 WidgetKind.BUTTONS -> ButtonsWidgetDestination
-                                WidgetKind.TILE -> TileWidgetDestination
                                 WidgetKind.TODAY -> TodayWidgetDestination
                             }
                         )
                     }
                 )
-                is DeckWidgetDestination, is ButtonsWidgetDestination, is TileWidgetDestination, is TodayWidgetDestination -> WidgetDetailScreen(
+                is DeckWidgetDestination, is ButtonsWidgetDestination, is TodayWidgetDestination -> WidgetDetailScreen(
                     kind = when (destination) {
                         is DeckWidgetDestination -> WidgetKind.DECK
                         is ButtonsWidgetDestination -> WidgetKind.BUTTONS
-                        is TileWidgetDestination -> WidgetKind.TILE
                         else -> WidgetKind.TODAY
                     },
                     onBack = { navViewModel.navigateBack() },

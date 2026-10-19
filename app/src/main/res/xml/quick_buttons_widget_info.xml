@@ -1,14 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Quick buttons. Resizes down to a single 1x1 button. Placing (or, on
+     Android 12+, long-press → reconfigure) asks which events it shows. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:label="@string/quick_buttons_label"
     android:description="@string/quick_buttons_description"
-    android:minWidth="110dp"
+    android:minWidth="40dp"
     android:minHeight="40dp"
-    android:minResizeWidth="70dp"
+    android:minResizeWidth="40dp"
     android:minResizeHeight="40dp"
     android:targetCellWidth="4"
     android:targetCellHeight="1"
     android:updatePeriodMillis="0"
     android:initialLayout="@layout/quick_buttons_widget"
     android:resizeMode="horizontal|vertical"
-    android:widgetCategory="home_screen" />
+    android:widgetCategory="home_screen"
+    android:configure="com.example.loglife.ui.widgets.QuickButtonsConfigureActivity"
+    android:widgetFeatures="reconfigurable" />

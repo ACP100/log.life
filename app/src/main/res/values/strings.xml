@@ -3,9 +3,7 @@
     <string name="widget_label">Quick log deck</string>
     <string name="widget_description">One tile at a time: running sessions first, then your favourites. Tap to start, stop or log.</string>
     <string name="quick_buttons_label">Quick buttons</string>
-    <string name="quick_buttons_description">Your first favourites as one-tap buttons.</string>
+    <string name="quick_buttons_description">One-tap buttons for your favourites or events you pick. Shrinks to a single 1×1 button.</string>
     <string name="today_stats_label">Today</string>
     <string name="today_stats_description">What\'s running and today\'s logs, with your total time.</string>
-    <string name="single_tile_label">Single tile</string>
-    <string name="single_tile_description">One event of your choice as a 1×1 tile. Tap to log, start or stop it.</string>
 </resources>

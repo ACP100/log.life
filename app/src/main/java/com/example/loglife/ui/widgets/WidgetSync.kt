@@ -47,7 +47,6 @@ object WidgetSync {
     val providers: List<Class<*>> = listOf(
         EventLogWidgetProvider::class.java,
         QuickButtonsWidgetProvider::class.java,
-        SingleTileWidgetProvider::class.java,
         TodayStatsWidgetProvider::class.java,
     )
 

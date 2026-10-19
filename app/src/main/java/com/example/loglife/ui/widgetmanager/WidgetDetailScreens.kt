@@ -14,6 +14,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -41,8 +44,8 @@ import com.example.loglife.ui.theme.HomeSurface
 import com.example.loglife.ui.theme.sheetMono
 import com.example.loglife.ui.theme.sheetText
 import com.example.loglife.ui.widgets.PlacedWidget
-import com.example.loglife.ui.widgets.SingleTileConfigureActivity
-import com.example.loglife.ui.widgets.SingleTileStore
+import com.example.loglife.ui.widgets.QuickButtonsConfigureActivity
+import com.example.loglife.ui.widgets.QuickButtonsStore
 import com.example.loglife.ui.widgets.WidgetKind
 import com.example.loglife.ui.widgets.WidgetPlacement
 import com.example.loglife.data.model.EventMode
@@ -60,8 +63,7 @@ fun WidgetDetailScreen(
     val placed = rememberPlacedWidgets()[kind].orEmpty()
     when (kind) {
         WidgetKind.DECK -> DeckSettings(state, placed, onBack, onOpenFavourites, viewModel::updateSettings)
-        WidgetKind.BUTTONS -> ButtonsSettings(state, onBack, onOpenFavourites, viewModel::updateSettings)
-        WidgetKind.TILE -> TileSettings(state, placed, onBack)
+        WidgetKind.BUTTONS -> ButtonsSettings(state, placed, onBack, onOpenFavourites, viewModel::updateSettings)
         WidgetKind.TODAY -> TodaySettings(state, onBack, viewModel::updateSettings)
     }
 }
@@ -105,6 +107,7 @@ internal fun deckSizeName(widget: PlacedWidget): String = when {
 @Composable
 private fun ButtonsSettings(
     state: WidgetsState,
+    placed: List<PlacedWidget>,
     onBack: () -> Unit,
     onOpenFavourites: () -> Unit,
     onSettings: ((WidgetSettings) -> WidgetSettings) -> Unit,
@@ -137,49 +140,61 @@ private fun ButtonsSettings(
             CardDivider()
             NavRow(title = "Buttons", subtitle = "The first favourites, in your order", onClick = onOpenFavourites)
         }
+        PlacedButtons(state, placed)
     }
 }
 
 /**
- * Single tiles: each placed 1×1 tile with the event it logs. Tapping one
- * reopens its picker; "Add a tile" pins a new one (the picker runs first).
+ * Each placed Quick buttons widget and what it shows: the favourites, or
+ * events picked for it alone (e.g. a 1×1 with one button). "Change" opens
+ * the picker for that widget.
  */
 @Composable
-private fun TileSettings(state: WidgetsState, placed: List<PlacedWidget>, onBack: () -> Unit) {
+private fun PlacedButtons(state: WidgetsState, placed: List<PlacedWidget>) {
     val context = LocalContext.current
     val types = (state.favourites + state.others).associateBy { it.id }
-    SettingsPage(
-        title = WidgetKind.TILE.title,
-        backLabel = "Widgets",
-        onBack = onBack,
-        subtitle = "A 1×1 tile for one event you choose. Place as many as you like, each with its own event."
-    ) {
-        SectionLabel("Placed · ${placed.size}")
-        SettingsCard {
-            placed.forEachIndexed { i, w ->
-                if (i > 0) CardDivider()
-                val type = SingleTileStore.get(context, w.id)?.let { types[it] }
-                NavRow(
-                    title = type?.name ?: "No event picked",
-                    subtitle = type?.let { if (it.eventMode == EventMode.DURATION) "Session · tap starts and stops" else "Moment · tap logs it" }
-                        ?: "The tile shows “Pick event”",
-                    value = "Change",
-                    onClick = { context.startActivity(SingleTileConfigureActivity.intent(context, w.id)) }
-                )
-            }
-            if (placed.isNotEmpty()) CardDivider()
-            AddRow(
-                label = "Add a tile to your home screen",
-                enabled = true,
-                onClick = { WidgetPlacement.requestPin(context, WidgetKind.TILE) }
+    // Picks are saved by the picker activity: re-read them when we're back.
+    var resumes by remember { mutableIntStateOf(0) }
+    LifecycleResumeEffect(Unit) {
+        resumes++
+        onPauseOrDispose { }
+    }
+    val picks = remember(placed, resumes) { placed.associate { it.id to QuickButtonsStore.get(context, it.id) } }
+    SectionLabel("Placed · ${placed.size}")
+    SettingsCard {
+        placed.forEachIndexed { i, w ->
+            if (i > 0) CardDivider()
+            val picked = picks[w.id]
+            val names = picked?.mapNotNull { types[it]?.name }
+            NavRow(
+                title = when {
+                    picked == null -> "Favourites"
+                    names.isNullOrEmpty() -> "No events left"
+                    else -> names.joinToString(", ")
+                },
+                subtitle = when {
+                    picked == null -> "${w.size} · follows your favourites"
+                    names.isNullOrEmpty() -> "${w.size} · shows “Pick events”"
+                    names.size == 1 -> "${w.size} · 1 button, just for this widget"
+                    else -> "${w.size} · ${names.size} buttons, just for this widget"
+                },
+                value = "Change",
+                onClick = { context.startActivity(QuickButtonsConfigureActivity.intent(context, w.id)) }
             )
         }
-        Text(
-            "You can also long-press a tile on your home screen to change its event.",
-            style = sheetText(13.sp, color = HomeInkSecondary),
-            modifier = Modifier.padding(start = 4.dp, top = 12.dp)
+        if (placed.isNotEmpty()) CardDivider()
+        AddRow(
+            label = "Add quick buttons to your home screen",
+            enabled = true,
+            onClick = { WidgetPlacement.requestPin(context, WidgetKind.BUTTONS) }
         )
     }
+    Text(
+        "Shrink a Quick buttons widget to 1×1 for a single button, then pick its event. " +
+            "You can also long-press a widget on your home screen to change it.",
+        style = sheetText(13.sp, color = HomeInkSecondary),
+        modifier = Modifier.padding(start = 4.dp, top = 12.dp)
+    )
 }
 
 @Composable
