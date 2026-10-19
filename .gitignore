@@ -35,3 +35,10 @@ TASK_COMPLETED.md
 TODO_FIXED_AND_TESTED.md
 graphify-out
 .claude
+# Private / local-only - never publish
+APPLICATION_DESCRIPTION.md
+*.jks
+*.keystore
+keystore.properties
+*.hprof
+*.log
