@@ -55,6 +55,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import com.example.loglife.data.dao.PlanWithType
+import com.example.loglife.viewmodel.UndoDelete
+import kotlinx.coroutines.launch
 import com.example.loglife.data.dao.EventInstanceWithType
 import com.example.loglife.data.model.EventInstance
 import com.example.loglife.data.model.EventMode
@@ -96,11 +102,21 @@ fun HomeScreen(
     onLogSheetRequestHandled: () -> Unit = {},
     fixEndInstanceId: Long? = null,
     onFixEndHandled: () -> Unit = {},
+    onOpenEventStats: (Long) -> Unit = {},
     viewModel: MainViewModel = hiltViewModel()
 ) {
     val activeEvents by viewModel.activeEvents.collectAsStateWithLifecycle()
     val todayEvents by viewModel.todayEvents.collectAsStateWithLifecycle()
+    val plans by viewModel.plannedToday.collectAsStateWithLifecycle()
+    val noteCounts by viewModel.noteCounts.collectAsStateWithLifecycle()
+    val notesByLog by viewModel.notesByLog.collectAsStateWithLifecycle()
+    val undo by viewModel.undo.collectAsStateWithLifecycle()
+    val eventTypes by viewModel.events.collectAsStateWithLifecycle()
     var logSheetOpen by rememberSaveable { mutableStateOf(false) }
+    var planOpen by rememberSaveable { mutableStateOf(false) }
+    var selectedLogId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var editingLogId by rememberSaveable { mutableStateOf<Long?>(null) }
+    val scope = rememberCoroutineScope()
     LaunchedEffect(logSheetRequested) {
         if (logSheetRequested) {
             logSheetOpen = true
@@ -119,7 +135,9 @@ fun HomeScreen(
     }
     LaunchedEffect(date) { viewModel.onDayChanged(date) }
 
-    val state = remember(todayEvents, activeEvents) { buildHomeUiState(todayEvents, activeEvents) }
+    val state = remember(todayEvents, activeEvents, noteCounts) {
+        buildHomeUiState(todayEvents, activeEvents, noteCounts)
+    }
 
     HomeScreenContent(
         state = state,
@@ -128,10 +146,68 @@ fun HomeScreen(
         onStop = viewModel::stopDurationEvent,
         onLogSomething = { logSheetOpen = true },
         onSeeYesterday = onSeeYesterday,
-        modifier = modifier
+        modifier = modifier,
+        plans = plans,
+        onStartPlan = viewModel::startPlan,
+        onPlan = { planOpen = true },
+        onOpenLog = { selectedLogId = it.instanceId },
+        onEditLog = { editingLogId = it.instanceId },
+        onDeleteLog = { viewModel.deleteLog(it.instanceId, it.name) },
+        undo = undo,
+        onUndo = viewModel::undoDelete,
+        onDismissUndo = viewModel::dismissUndo
     )
 
     if (logSheetOpen) LogSheet(onDismiss = { logSheetOpen = false })
+
+    val selected = state.logged.firstOrNull { it.instanceId == selectedLogId }
+    if (selected != null) {
+        val context by produceState<LogContext?>(null, selected.instanceId) {
+            value = viewModel.contextFor(selected.eventTypeId, selected.startTime)
+        }
+        LogDetailPopup(
+            item = selected,
+            notes = notesByLog[selected.instanceId].orEmpty(),
+            context = context,
+            onAddNote = { viewModel.addNote(selected.instanceId, it) },
+            onEditTime = { editingLogId = selected.instanceId },
+            onOpenStats = {
+                selectedLogId = null
+                onOpenEventStats(selected.eventTypeId)
+            },
+            onLogAgain = {
+                viewModel.logAgain(selected.eventTypeId, selected.isDuration)
+                selectedLogId = null
+            },
+            onDismiss = { selectedLogId = null }
+        )
+    }
+
+    val editing = state.logged.firstOrNull { it.instanceId == editingLogId }
+    if (editing != null) {
+        EditTimeSheet(
+            item = editing,
+            dayLogs = todayEvents,
+            onDismiss = { editingLogId = null },
+            onSave = { start, end ->
+                scope.launch {
+                    if (viewModel.saveTimes(editing.instanceId, start, end)) editingLogId = null
+                }
+            }
+        )
+    }
+
+    if (planOpen) {
+        PlanSheet(
+            events = eventTypes,
+            initialEventId = null,
+            onDismiss = { planOpen = false },
+            onSave = { eventId, plannedAt, offset, days ->
+                viewModel.createPlan(eventId, plannedAt, offset, days)
+                planOpen = false
+            }
+        )
+    }
 
     val fixing = fixEndInstanceId?.let { id -> activeEvents.firstOrNull { it.eventInstance.id == id } }
     if (fixing != null) {
@@ -158,11 +234,36 @@ fun HomeScreenContent(
     onStop: (Long) -> Unit,
     onLogSomething: () -> Unit,
     onSeeYesterday: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    plans: List<PlanWithType> = emptyList(),
+    onStartPlan: (Long) -> Unit = {},
+    onPlan: () -> Unit = {},
+    onOpenLog: (LoggedItem) -> Unit = {},
+    onEditLog: (LoggedItem) -> Unit = {},
+    onDeleteLog: (LoggedItem) -> Unit = {},
+    undo: UndoDelete? = null,
+    onUndo: () -> Unit = {},
+    onDismissUndo: (Long) -> Unit = {}
 ) {
     val primary = state.running.firstOrNull()
     val secondary = state.running.drop(1)
     val showRunning = state.running.isNotEmpty() || state.logged.isEmpty()
+
+    // Only one logged row can be revealed at a time; scrolling closes it.
+    var revealedId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var revealDirection by rememberSaveable { mutableIntStateOf(REVEAL_NONE) }
+    val listState = rememberLazyListState()
+    LaunchedEffect(listState.isScrollInProgress) {
+        if (listState.isScrollInProgress) {
+            revealedId = null
+            revealDirection = REVEAL_NONE
+        }
+    }
+    fun revealFor(id: Long) = if (revealedId == id) revealDirection else REVEAL_NONE
+    fun setReveal(id: Long, direction: Int) {
+        revealedId = if (direction == REVEAL_NONE) null else id
+        revealDirection = direction
+    }
 
     Column(
         modifier = modifier
@@ -170,6 +271,7 @@ fun HomeScreenContent(
             .background(HomeBackground)
     ) {
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(),
@@ -202,6 +304,16 @@ fun HomeScreenContent(
                 }
             }
 
+            item(key = "planned") {
+                PlannedSection(
+                    plans = plans,
+                    now = now,
+                    onStart = onStartPlan,
+                    onPlan = onPlan,
+                    modifier = Modifier.padding(top = 20.dp)
+                )
+            }
+
             item(key = "logged-label") {
                 LoggedHeader(
                     count = state.logged.size,
@@ -213,8 +325,37 @@ fun HomeScreenContent(
             if (state.logged.isEmpty()) {
                 item(key = "empty") { BlankDay(onSeeYesterday) }
             } else {
-                items(state.logged, key = { "logged-${it.instanceId}" }) { LoggedRow(it) }
+                items(state.logged, key = { "logged-${it.instanceId}" }) { item ->
+                    SwipeableLogRow(
+                        name = item.name,
+                        time = formatClock(item.startTime),
+                        reveal = revealFor(item.instanceId),
+                        onRevealChange = { setReveal(item.instanceId, it) },
+                        onTap = { onOpenLog(item) },
+                        onEdit = {
+                            setReveal(item.instanceId, REVEAL_NONE)
+                            onEditLog(item)
+                        },
+                        onDelete = {
+                            setReveal(item.instanceId, REVEAL_NONE)
+                            onDeleteLog(item)
+                        }
+                    ) { LoggedRow(item) }
+                }
             }
+        }
+
+        undo?.let { pending ->
+            LaunchedEffect(pending.id) {
+                delay(UNDO_WINDOW_MILLIS)
+                onDismissUndo(pending.id)
+            }
+            HomeSnackbar(
+                message = "${pending.eventName} log deleted",
+                actionLabel = "Undo",
+                onAction = onUndo,
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)
+            )
         }
 
         Button(
@@ -233,6 +374,8 @@ fun HomeScreenContent(
     }
 }
 
+private const val UNDO_WINDOW_MILLIS = 5_000L
+
 private val headerDateFormatter = DateTimeFormatter.ofPattern("EEEE · d MMMM", Locale.getDefault())
 
 @Composable
@@ -245,7 +388,7 @@ private fun Header(date: LocalDate) {
 }
 
 @Composable
-private fun SectionLabel(text: String, live: Boolean, modifier: Modifier = Modifier) {
+internal fun SectionLabel(text: String, live: Boolean, modifier: Modifier = Modifier) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         if (live) {
             Dot(HomeLiveDot, 6.dp)
@@ -432,6 +575,10 @@ private fun LoggedRow(item: LoggedItem) {
                 overflow = TextOverflow.Ellipsis
             )
         }
+        if (item.noteCount > 0) {
+            Spacer(Modifier.width(8.dp))
+            NotesPill(item.noteCount)
+        }
         if (item.isDuration && item.endTime != null) {
             Spacer(Modifier.width(8.dp))
             Text(
@@ -491,7 +638,7 @@ private fun BlankDay(onSeeYesterday: () -> Unit) {
 }
 
 @Composable
-private fun CategoryChip(category: String) {
+internal fun CategoryChip(category: String) {
     Text(
         category,
         style = text(10.sp, FontWeight.Medium, Color.White.copy(alpha = 0.75f)),
@@ -535,7 +682,7 @@ fun HomeSnackbar(message: String, actionLabel: String?, onAction: () -> Unit, mo
 }
 
 @Composable
-private fun Dot(color: Color, size: androidx.compose.ui.unit.Dp) {
+internal fun Dot(color: Color, size: androidx.compose.ui.unit.Dp) {
     Box(
         Modifier
             .size(size)
@@ -545,7 +692,7 @@ private fun Dot(color: Color, size: androidx.compose.ui.unit.Dp) {
 }
 
 @Composable
-private fun Ring(color: Color, size: androidx.compose.ui.unit.Dp) {
+internal fun Ring(color: Color, size: androidx.compose.ui.unit.Dp) {
     Box(
         Modifier
             .size(size)
@@ -554,7 +701,7 @@ private fun Ring(color: Color, size: androidx.compose.ui.unit.Dp) {
 }
 
 @Composable
-private fun StopSquare(color: Color) {
+internal fun StopSquare(color: Color) {
     Box(
         Modifier
             .size(9.dp)
@@ -563,7 +710,7 @@ private fun StopSquare(color: Color) {
     )
 }
 
-private fun text(
+internal fun text(
     size: TextUnit,
     weight: FontWeight = FontWeight.Normal,
     color: Color = HomeInk,
@@ -578,7 +725,7 @@ private fun text(
     textAlign = textAlign
 )
 
-private fun mono(
+internal fun mono(
     size: TextUnit,
     weight: FontWeight = FontWeight.Normal,
     color: Color = HomeInk,

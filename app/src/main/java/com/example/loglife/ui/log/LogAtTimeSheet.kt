@@ -88,7 +88,7 @@ private enum class StartChip(val label: String, val minutes: Long?) {
 private val dayMonth = DateTimeFormatter.ofPattern("d MMM", Locale.getDefault())
 private val weekdayDayMonth = DateTimeFormatter.ofPattern("EEE, d MMM", Locale.getDefault())
 
-private fun dateLabel(date: LocalDate, today: LocalDate): String = when (date) {
+internal fun dateLabel(date: LocalDate, today: LocalDate): String = when (date) {
     today -> "Today, ${dayMonth.format(date)}"
     today.minusDays(1) -> "Yesterday, ${dayMonth.format(date)}"
     else -> weekdayDayMonth.format(date)
@@ -401,7 +401,7 @@ internal fun fitsLabel(day: List<EventInstanceWithType>, start: Long, end: Long,
 }
 
 @Composable
-private fun SoftButton(label: String, onClick: () -> Unit) {
+internal fun SoftButton(label: String, onClick: () -> Unit) {
     Box(
         Modifier
             .height(44.dp)
@@ -416,7 +416,7 @@ private fun SoftButton(label: String, onClick: () -> Unit) {
 }
 
 @Composable
-private fun Segment(label: String, selected: Boolean, enabled: Boolean, onClick: () -> Unit) {
+internal fun Segment(label: String, selected: Boolean, enabled: Boolean, onClick: () -> Unit) {
     Box(
         Modifier
             .height(34.dp)
@@ -432,7 +432,7 @@ private fun Segment(label: String, selected: Boolean, enabled: Boolean, onClick:
 }
 
 @Composable
-private fun DateTimeButton(
+internal fun DateTimeButton(
     label: String,
     mono: Boolean,
     emphasized: Boolean,
@@ -460,7 +460,7 @@ private fun DateTimeButton(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DatePick(initial: LocalDate, today: LocalDate, onDismiss: () -> Unit, onPick: (LocalDate) -> Unit) {
+internal fun DatePick(initial: LocalDate, today: LocalDate, onDismiss: () -> Unit, onPick: (LocalDate) -> Unit) {
     val todayUtc = today.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
     val state = rememberDatePickerState(
         initialSelectedDateMillis = initial.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
@@ -485,7 +485,7 @@ private fun DatePick(initial: LocalDate, today: LocalDate, onDismiss: () -> Unit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TimePick(initial: LocalTime, onDismiss: () -> Unit, onPick: (LocalTime) -> Unit) {
+internal fun TimePick(initial: LocalTime, onDismiss: () -> Unit, onPick: (LocalTime) -> Unit) {
     val state = rememberTimePickerState(initialHour = initial.hour, initialMinute = initial.minute, is24Hour = true)
     AlertDialog(
         onDismissRequest = onDismiss,

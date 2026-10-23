@@ -21,7 +21,7 @@ interface EventInstanceDao {
 
     @Query("""
         SELECT
-            ei.id, ei.eventTypeId, ei.startTime, ei.endTime, ei.note, ei.createdAt, ei.updatedAt,
+            ei.id, ei.eventTypeId, ei.startTime, ei.endTime, ei.note, ei.planId, ei.createdAt, ei.updatedAt,
             et.id AS type_id, et.name AS type_name, et.icon AS type_icon,
             et.eventMode AS type_eventMode, et.category AS type_category,
             et.showInWidget AS type_showInWidget, et.widgetOrder AS type_widgetOrder,
@@ -39,7 +39,7 @@ interface EventInstanceDao {
     // overlap it (including ones that began earlier), and sessions still running.
     @Query("""
         SELECT
-            ei.id, ei.eventTypeId, ei.startTime, ei.endTime, ei.note, ei.createdAt, ei.updatedAt,
+            ei.id, ei.eventTypeId, ei.startTime, ei.endTime, ei.note, ei.planId, ei.createdAt, ei.updatedAt,
             et.id AS type_id, et.name AS type_name, et.icon AS type_icon,
             et.eventMode AS type_eventMode, et.category AS type_category,
             et.showInWidget AS type_showInWidget, et.widgetOrder AS type_widgetOrder,
@@ -60,7 +60,7 @@ interface EventInstanceDao {
     // One-shot variant for widgets (no Flow collection in a broadcast receiver).
     @Query("""
         SELECT
-            ei.id, ei.eventTypeId, ei.startTime, ei.endTime, ei.note, ei.createdAt, ei.updatedAt,
+            ei.id, ei.eventTypeId, ei.startTime, ei.endTime, ei.note, ei.planId, ei.createdAt, ei.updatedAt,
             et.id AS type_id, et.name AS type_name, et.icon AS type_icon,
             et.eventMode AS type_eventMode, et.category AS type_category,
             et.showInWidget AS type_showInWidget, et.widgetOrder AS type_widgetOrder,
@@ -99,10 +99,13 @@ interface EventInstanceDao {
     @Query("DELETE FROM event_instances WHERE id = :instanceId")
     suspend fun deleteById(instanceId: Long)
 
+    @Query("SELECT * FROM event_instances WHERE eventTypeId = :eventTypeId AND startTime >= :start AND startTime < :end ORDER BY startTime")
+    suspend fun getForTypeBetween(eventTypeId: Long, start: Long, end: Long): List<EventInstance>
+
     // Active duration events (endTime is null)
     @Query("""
         SELECT
-            ei.id, ei.eventTypeId, ei.startTime, ei.endTime, ei.note, ei.createdAt, ei.updatedAt,
+            ei.id, ei.eventTypeId, ei.startTime, ei.endTime, ei.note, ei.planId, ei.createdAt, ei.updatedAt,
             et.id AS type_id, et.name AS type_name, et.icon AS type_icon,
             et.eventMode AS type_eventMode, et.category AS type_category,
             et.showInWidget AS type_showInWidget, et.widgetOrder AS type_widgetOrder,
@@ -121,7 +124,7 @@ interface EventInstanceDao {
     // durations must filter by eventMode == DURATION.
     @Query("""
         SELECT
-            ei.id, ei.eventTypeId, ei.startTime, ei.endTime, ei.note, ei.createdAt, ei.updatedAt,
+            ei.id, ei.eventTypeId, ei.startTime, ei.endTime, ei.note, ei.planId, ei.createdAt, ei.updatedAt,
             et.id AS type_id, et.name AS type_name, et.icon AS type_icon,
             et.eventMode AS type_eventMode, et.category AS type_category,
             et.showInWidget AS type_showInWidget, et.widgetOrder AS type_widgetOrder,

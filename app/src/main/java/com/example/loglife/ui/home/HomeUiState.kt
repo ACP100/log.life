@@ -15,13 +15,15 @@ data class RunningItem(
 
 data class LoggedItem(
     val instanceId: Long,
+    val eventTypeId: Long,
     val name: String,
     val category: String?,
     val startTime: Long,
     val endTime: Long?,
     val isDuration: Boolean,
     val duringName: String?,
-    val duringCategory: String?
+    val duringCategory: String?,
+    val noteCount: Int = 0
 )
 
 data class HomeUiState(
@@ -34,7 +36,8 @@ private data class Span(val id: Long, val name: String, val category: String?, v
 
 fun buildHomeUiState(
     today: List<EventInstanceWithType>,
-    active: List<EventInstanceWithType>
+    active: List<EventInstanceWithType>,
+    noteCounts: Map<Long, Int> = emptyMap()
 ): HomeUiState {
     val all = (today + active).distinctBy { it.eventInstance.id }
     val isRunning = { e: EventInstanceWithType ->
@@ -88,13 +91,15 @@ fun buildHomeUiState(
             val container = containerOf(e.eventInstance.id, e.eventInstance.startTime)
             LoggedItem(
                 instanceId = e.eventInstance.id,
+                eventTypeId = e.eventInstance.eventTypeId,
                 name = e.eventType.name,
                 category = e.eventType.category,
                 startTime = e.eventInstance.startTime,
                 endTime = e.eventInstance.endTime,
                 isDuration = e.eventType.eventMode == EventMode.DURATION,
                 duringName = container?.name,
-                duringCategory = container?.category
+                duringCategory = container?.category,
+                noteCount = noteCounts[e.eventInstance.id] ?: 0
             )
         }
 

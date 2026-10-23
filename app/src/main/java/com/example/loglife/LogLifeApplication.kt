@@ -2,6 +2,7 @@ package com.example.loglife
 
 import android.app.Application
 import com.example.loglife.data.repository.EventInstanceRepository
+import com.example.loglife.data.repository.PlanRepository
 import com.example.loglife.data.repository.EventTypeRepository
 import com.example.loglife.notifications.SessionNotifications
 import com.example.loglife.ui.widgets.WidgetSync
@@ -23,6 +24,9 @@ class LogLifeApplication : Application() {
 
     @Inject
     lateinit var eventInstanceRepository: EventInstanceRepository
+
+    @Inject
+    lateinit var planRepository: PlanRepository
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 

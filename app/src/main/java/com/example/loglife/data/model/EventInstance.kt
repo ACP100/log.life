@@ -30,6 +30,7 @@ data class EventInstance(
     val startTime: Long, // UTC timestamp in milliseconds
     val endTime: Long? = null, // null for instant events or active durations
     val note: String? = null,
+    val planId: Long? = null, // set when this log was started from a Plan
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )

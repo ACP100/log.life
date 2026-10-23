@@ -91,6 +91,9 @@ val HomeLiveDot get() = currentPalette.liveDot
 val HomeSnackbarAction get() = currentPalette.snackbarAction
 val HomeStopTile get() = currentPalette.stopTile
 
+/** Destructive action colour (delete buttons); the same in both themes. */
+val HomeDestructive = Color(0xFFB3341A)
+
 val SheetHandle get() = currentPalette.sheetHandle
 val SheetBorder get() = currentPalette.sheetBorder
 val SheetChipDark get() = currentPalette.sheetChipDark

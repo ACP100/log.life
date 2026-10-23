@@ -38,6 +38,10 @@
 
         <!-- Stop / Still going on the session notifications -->
         <receiver
+            android:name=".notifications.PlanActionReceiver"
+            android:exported="false" />
+
+        <receiver
             android:name=".notifications.SessionActionReceiver"
             android:exported="false" />
 

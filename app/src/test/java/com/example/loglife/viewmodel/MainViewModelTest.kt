@@ -5,6 +5,9 @@ import com.example.loglife.data.model.EventInstance
 import com.example.loglife.data.model.EventMode
 import com.example.loglife.data.model.EventType
 import com.example.loglife.data.repository.EventInstanceRepository
+import com.example.loglife.data.repository.EventTypeRepository
+import com.example.loglife.data.repository.PlanRepository
+import com.example.loglife.data.settings.AppSettingsRepository
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.flowOf
 import org.junit.Test
@@ -30,7 +33,10 @@ class MainViewModelTest {
         `when`(repo.getActiveDurationEventsFlow()).thenReturn(
             flowOf(listOf(row(1, EventMode.DURATION), row(2, EventMode.INSTANT), row(3, EventMode.DURATION, end = 2_000)))
         )
-        val viewModel = MainViewModel(repo)
+        `when`(repo.getAllNotesFlow()).thenReturn(flowOf(emptyList()))
+        val types = mock(EventTypeRepository::class.java)
+        `when`(types.getAllEventTypesFlow()).thenReturn(flowOf(emptyList()))
+        val viewModel = MainViewModel(repo, mock(PlanRepository::class.java), types, mock(AppSettingsRepository::class.java))
 
         // Collected on Dispatchers.IO; give it a moment.
         val deadline = System.currentTimeMillis() + 2_000

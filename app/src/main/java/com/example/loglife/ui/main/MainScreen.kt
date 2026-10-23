@@ -86,6 +86,7 @@ fun MainScreen(
         content = { destination ->
             when (destination) {
                 is HomeDestination -> HomeScreen(
+                    onOpenEventStats = { navViewModel.navigateTo(EventDetailDestination(it)) },
                     onSeeYesterday = {
                         historyViewModel.show(HistoryPeriod.DAY, LocalDate.now().minusDays(1))
                         navViewModel.navigateTo(HistoryDestination)

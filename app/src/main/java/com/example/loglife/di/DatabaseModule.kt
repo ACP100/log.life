@@ -4,6 +4,8 @@ import android.content.Context
 import com.example.loglife.data.LogLifeDatabase
 import com.example.loglife.data.dao.EventInstanceDao
 import com.example.loglife.data.dao.EventTypeDao
+import com.example.loglife.data.dao.NoteDao
+import com.example.loglife.data.dao.PlanDao
 import com.example.loglife.data.settings.AppSettingsRepository
 import dagger.Module
 import dagger.Provides
@@ -38,4 +40,12 @@ object DatabaseModule {
     fun provideEventInstanceDao(database: LogLifeDatabase): EventInstanceDao {
         return database.eventInstanceDao()
     }
+
+    @Provides
+    @Singleton
+    fun provideNoteDao(database: LogLifeDatabase): NoteDao = database.noteDao()
+
+    @Provides
+    @Singleton
+    fun providePlanDao(database: LogLifeDatabase): PlanDao = database.planDao()
 }
